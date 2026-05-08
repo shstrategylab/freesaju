@@ -215,100 +215,6 @@
   }
   .lunar-converted.show { display: block; }
 
-  /* ── 나이대 버튼 ── */
-  .age-row { display: flex; gap: 10px; flex-wrap: wrap; }
-  .age-btn {
-    flex: 1; min-width: 60px;
-    padding: 10px 14px;
-    border: 1.5px solid rgba(0,0,0,.14);
-    border-radius: 10px;
-    background: white;
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 14px;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all .2s;
-    text-align: center;
-  }
-  .age-btn.active {
-    border-color: var(--gold);
-    background: rgba(200,151,58,.08);
-    color: var(--gold);
-    font-weight: 600;
-  }
-
-  /* ── 관심사 버튼 ── */
-  .interest-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-  .interest-btn {
-    padding: 8px 14px;
-    border: 1.5px solid rgba(0,0,0,.14);
-    border-radius: 20px;
-    background: white;
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 13px;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all .2s;
-  }
-  .interest-btn.active {
-    border-color: var(--rust);
-    background: rgba(139,58,42,.07);
-    color: var(--rust);
-    font-weight: 600;
-  }
-
-  /* ── 맞춤 전략 배너 ── */
-  .strategy-banner {
-    background: linear-gradient(135deg, rgba(30,45,74,.06), rgba(200,151,58,.06));
-    border: 1px solid rgba(30,45,74,.15);
-    border-radius: 14px;
-    padding: 14px 20px;
-    margin-bottom: 28px;
-    display: flex; align-items: center; gap: 12px;
-  }
-  .strategy-banner .sb-icon { font-size: 22px; }
-  .strategy-banner .sb-text { font-size: 13px; color: var(--navy); line-height: 1.5; }
-  .strategy-banner .sb-text strong { color: var(--gold); }
-
-  /* ── Claude AI 풀이 카드 ── */
-  .ai-reading-card {
-    background: linear-gradient(135deg, rgba(30,45,74,.04), rgba(200,151,58,.04));
-    border: 1.5px solid rgba(30,45,74,.15);
-    border-radius: 16px;
-    padding: 28px;
-    margin-bottom: 20px;
-    box-shadow: var(--shadow);
-    animation: fadeUp .5s ease both;
-  }
-  .ai-reading-card .card-title {
-    display: flex; align-items: center; gap: 8px;
-    font-family: 'Noto Serif KR', serif;
-    font-size: 15px; font-weight: 700; color: var(--ink);
-    margin-bottom: 14px; padding-bottom: 10px;
-    border-bottom: 1px solid var(--border);
-  }
-  .ai-reading-card .card-title .ai-badge {
-    font-size: 10px; background: var(--navy); color: #fff;
-    padding: 2px 8px; border-radius: 20px; font-family: 'Noto Sans KR', sans-serif;
-    font-weight: 500; letter-spacing: .04em;
-  }
-  .ai-reading-card .card-body {
-    font-size: 14px; color: var(--ink); line-height: 1.9;
-    white-space: pre-wrap;
-  }
-  .ai-loading {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 13px; color: var(--muted); padding: 8px 0;
-  }
-  .ai-dots span {
-    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
-    background: var(--gold); margin: 0 2px;
-    animation: dot-bounce .8s infinite;
-  }
-  .ai-dots span:nth-child(2) { animation-delay: .15s; }
-  .ai-dots span:nth-child(3) { animation-delay: .3s; }
-  @keyframes dot-bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-6px); } }
-
   /* ── 로딩 ── */
   #loading { display: none; text-align: center; padding: 60px 0; }
   .spinner {
@@ -738,28 +644,6 @@
           <button class="gender-btn" data-gender="여" onclick="selectGender(this)">♀ 여성</button>
         </div>
       </div>
-      <div class="form-group full">
-        <label>나이대</label>
-        <div class="age-row" id="age-row">
-          <button class="age-btn" data-age="20대" onclick="selectAge(this)">20대</button>
-          <button class="age-btn" data-age="30대" onclick="selectAge(this)">30대</button>
-          <button class="age-btn" data-age="40대" onclick="selectAge(this)">40대</button>
-          <button class="age-btn active" data-age="50대+" onclick="selectAge(this)">50대+</button>
-        </div>
-      </div>
-      <div class="form-group full">
-        <label>지금 가장 궁금한 것 <span style="font-weight:400;color:var(--gold);font-size:11px">(복수 선택 가능)</span></label>
-        <div class="interest-grid" id="interest-grid">
-          <button class="interest-btn" data-interest="취업·이직" onclick="toggleInterest(this)">💼 취업·이직</button>
-          <button class="interest-btn" data-interest="사업·창업" onclick="toggleInterest(this)">🏢 사업·창업</button>
-          <button class="interest-btn" data-interest="연애·궁합" onclick="toggleInterest(this)">💕 연애·궁합</button>
-          <button class="interest-btn" data-interest="결혼·인연" onclick="toggleInterest(this)">💍 결혼·인연</button>
-          <button class="interest-btn" data-interest="재물·투자" onclick="toggleInterest(this)">💰 재물·투자</button>
-          <button class="interest-btn" data-interest="말년·노후" onclick="toggleInterest(this)">🌅 말년·노후</button>
-          <button class="interest-btn" data-interest="자녀·가족운" onclick="toggleInterest(this)">👨‍👩‍👧 자녀·가족운</button>
-          <button class="interest-btn" data-interest="자기이해" onclick="toggleInterest(this)">🔮 자기이해</button>
-        </div>
-      </div>
     </div>
     <button class="submit-btn" onclick="runAnalysis()">✦ 사주 분석 시작</button>
   </div>
@@ -805,112 +689,12 @@ function lunarLastDay(ly, lm, isLeap) {
 
 /* ── UI 상태 ── */
 let selectedGender = '남';
-let selectedAge = '50대+';
-let selectedInterests = [];
 let calType = 'solar';
 
 function selectGender(el) {
   document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   selectedGender = el.dataset.gender;
-}
-
-function selectAge(el) {
-  document.querySelectorAll('.age-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  selectedAge = el.dataset.age;
-}
-
-function toggleInterest(el) {
-  el.classList.toggle('active');
-  const v = el.dataset.interest;
-  if (el.classList.contains('active')) {
-    if (!selectedInterests.includes(v)) selectedInterests.push(v);
-  } else {
-    selectedInterests = selectedInterests.filter(x => x !== v);
-  }
-}
-
-/* ── 사용자 유형 전략 판별 ── */
-function getUserStrategy(age, gender, interests) {
-  const hasInterest = (...keys) => keys.some(k => interests.includes(k));
-
-  if (age === '50대+') {
-    return {
-      type: '50대+', label: '말년·인생 흐름 중심', order: [2, 1, 0], icon: '🌅',
-      desc: '지금 흐르는 대운과 사회적 위치를 먼저, 마지막에 타고난 성품으로 마무리합니다.',
-      aiSection: '말년운·대운 중심 맞춤 풀이',
-      buildPrompt: (info) => `명리학 전문가로서 50대 이상 사용자를 위한 맞춤 사주풀이를 작성해주세요.
-
-사주: 일간 ${info.ilgan}(${info.ilganSymbol}), 격국 ${info.geokguk}, 강한 오행 ${info.ohengStrong||'없음'}, 부족한 오행 ${info.ohengWeak||'없음'}
-관심사: ${info.interests||'전반적 운세'}
-
-풀이 순서 - 지금 인생의 단계와 말년운(대운·흐름) → 자녀·가족 관계 → 타고난 성품과 지혜. 따뜻하고 위로가 되는 어조로 400자 내외. 마크다운 기호 없이 자연스러운 문장으로만.`,
-    };
-  }
-  if (age === '40대') {
-    return {
-      type: '40대', label: '사회·이직 환경 중심', order: [1, 2, 0], icon: '🏢',
-      desc: '현재 사회 환경과 이직 타이밍을 먼저, 앞으로의 흐름, 타고난 역량 순으로 분석합니다.',
-      aiSection: '직업·이직 타이밍 중심 맞춤 풀이',
-      buildPrompt: (info) => `명리학 전문가로서 40대 이직·사업 전환을 고민하는 사용자를 위한 사주풀이를 작성해주세요.
-
-사주: 일간 ${info.ilgan}(${info.ilganSymbol}), 격국 ${info.geokguk}, 강한 오행 ${info.ohengStrong||'없음'}, 부족한 오행 ${info.ohengWeak||'없음'}
-관심사: ${info.interests||'이직·변화'}
-
-풀이 순서 - 현재 사회 환경과 직업적 위치 → 지금이 변화 타이밍인지 → 타고난 역량과 방향. 현실적이고 구체적인 어조로 400자 내외. 마크다운 기호 없이 자연스러운 문장으로만.`,
-    };
-  }
-  if (gender === '여' && hasInterest('자기이해', '연애·궁합', '결혼·인연')) {
-    return {
-      type: '자기이해_여성', label: '성격·관계 패턴 중심', order: [0, 1, 2], icon: '🌸',
-      desc: '타고난 성격과 욕구를 먼저, 관계 패턴, 앞으로의 인연 흐름 순으로 분석합니다.',
-      aiSection: '성격·연애 패턴 중심 맞춤 풀이',
-      buildPrompt: (info) => `명리학 전문가로서 자기이해와 연애·관계에 관심 있는 여성 사용자를 위한 사주풀이를 작성해주세요.
-
-사주: 일간 ${info.ilgan}(${info.ilganSymbol}), 격국 ${info.geokguk}, 강한 오행 ${info.ohengStrong||'없음'}, 부족한 오행 ${info.ohengWeak||'없음'}
-관심사: ${info.interests||'자기이해·연애'}
-
-풀이 순서 - 타고난 성격과 내면의 욕구 → 연애·관계에서 나타나는 패턴과 이상형 → 앞으로 인연이 들어오는 흐름. 공감하며 섬세하게 400자 내외. 마크다운 기호 없이 자연스러운 문장으로만.`,
-    };
-  }
-  if (hasInterest('취업·이직', '사업·창업')) {
-    return {
-      type: '취업이직', label: '직장·사업 타이밍 중심', order: [1, 2, 0], icon: '💼',
-      desc: '사회 환경과 직장운을 먼저, 대운 타이밍, 나의 강점 순으로 분석합니다.',
-      aiSection: '취업·사업 타이밍 중심 맞춤 풀이',
-      buildPrompt: (info) => `명리학 전문가로서 취업·이직·창업 타이밍을 고민하는 사용자를 위한 사주풀이를 작성해주세요.
-
-사주: 일간 ${info.ilgan}(${info.ilganSymbol}), 격국 ${info.geokguk}, 강한 오행 ${info.ohengStrong||'없음'}, 부족한 오행 ${info.ohengWeak||'없음'}
-관심사: ${info.interests||'취업·창업'}
-
-풀이 순서 - 직업·사업에 맞는 사회 환경 분석 → 지금이 움직일 타이밍인지 → 강점과 잘 맞는 방향. 실용적이고 직접적인 어조로 400자 내외. 마크다운 기호 없이 자연스러운 문장으로만.`,
-    };
-  }
-  if (hasInterest('자녀·가족운')) {
-    return {
-      type: '가족운', label: '가족·자녀 관계 중심', order: [1, 0, 2], icon: '👨‍👩‍👧',
-      desc: '가족 관계 배치를 먼저, 각자의 에너지, 시기 흐름 순으로 분석합니다.',
-      aiSection: '자녀·가족운 중심 맞춤 풀이',
-      buildPrompt: (info) => `명리학 전문가로서 자녀·가족운에 관심 있는 사용자를 위한 사주풀이를 작성해주세요.
-
-사주: 일간 ${info.ilgan}(${info.ilganSymbol}), 격국 ${info.geokguk}, 강한 오행 ${info.ohengStrong||'없음'}, 부족한 오행 ${info.ohengWeak||'없음'}
-관심사: ${info.interests||'자녀·가족'}
-
-풀이 순서 - 사주에서 보이는 가족 관계 배치 → 자녀·가족과의 관계 에너지 → 가족운이 좋아지는 시기. 따뜻하고 가정적인 어조로 400자 내외. 마크다운 기호 없이 자연스러운 문장으로만.`,
-    };
-  }
-  return {
-    type: '기본', label: '종합 분석 (성품→환경→흐름)', order: [0, 1, 2], icon: '✦',
-    desc: '타고난 성품부터 환경, 앞으로의 흐름 순서로 단계적으로 분석합니다.',
-    aiSection: '종합 사주 맞춤 풀이',
-    buildPrompt: (info) => `명리학 전문가로서 종합적인 사주풀이를 작성해주세요.
-
-사주: 일간 ${info.ilgan}(${info.ilganSymbol}), 격국 ${info.geokguk}, 강한 오행 ${info.ohengStrong||'없음'}, 부족한 오행 ${info.ohengWeak||'없음'}
-관심사: ${info.interests||'전반적 운세'}
-
-풀이 순서 - 타고난 성품과 강점 → 현재 사회 환경과 관계 → 앞으로의 운세 흐름. 명리학적 통찰을 담아 400자 내외. 마크다운 기호 없이 자연스러운 문장으로만.`,
-  };
 }
 
 function setCalType(type) {
@@ -992,8 +776,7 @@ function runAnalysis() {
     try {
       const effectiveHour = hour !== null ? hour : 12;
       const data = SajuEngine.analyze(year, month, day, effectiveHour);
-      const strategy = getUserStrategy(selectedAge, selectedGender, selectedInterests);
-      renderResult(data, year, month, day, hour, selectedGender, lunarInfo, strategy, [...selectedInterests]);
+      renderResult(data, year, month, day, hour, selectedGender, lunarInfo);
     } catch(e) {
       document.getElementById('loading').style.display = 'none';
       alert('분석 중 오류가 발생했습니다: ' + e.message);
@@ -1002,7 +785,7 @@ function runAnalysis() {
 }
 
 /* ── 결과 렌더링 ── */
-function renderResult(data, year, month, day, hour, gender, lunarInfo, strategy, interests) {
+function renderResult(data, year, month, day, hour, gender, lunarInfo) {
   const { yeonju, wolju, ilju, siju, sipseong, dist, balance, geokguk, reading, cheoneul } = data;
 
   const OHENG_COLOR = { 목:'#4a7c59', 화:'#c0392b', 토:'#c8973a', 금:'#d0d0d0', 수:'#2c3e50' };
@@ -1096,23 +879,7 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo, strategy,
   // index 3: 적합한 직업군 → 완전 공개 (격국 기반 단순 매핑)
   // index 4: 대인관계 스타일 → 첫 줄 공개 + 부분 잠금 (엔진 계산이지만 짧은 텍스트)
 
-  // 전략 순서에 따라 reading 재배열 (처음 3개 카드: 성품/격국, 오행/직업, 대인관계)
-  const coreIdxMap = strategy && strategy.order ? strategy.order : [0, 1, 2];
-  // reading[0]=성품, [1]=격국, [2]=오행균형, [3]=직업군, [4]=대인관계
-  // order는 [성품·격국 그룹=0, 오행·직업 그룹=1, 대인관계 그룹=2]
-  const groupedReading = [
-    [reading[0], reading[1]],   // 그룹0: 성품+격국
-    [reading[2], reading[3]],   // 그룹1: 오행균형+직업군
-    [reading[4]],               // 그룹2: 대인관계
-  ];
-  const orderedReading = [];
-  coreIdxMap.forEach(gi => {
-    (groupedReading[gi] || []).forEach(r => { if (r) orderedReading.push(r); });
-  });
-  // 나머지 (없으면 원래 reading)
-  const finalReading = orderedReading.length > 0 ? orderedReading : reading;
-
-  const readingCards = finalReading.map((r, i) => {
+  const readingCards = reading.map((r, i) => {
     if (i <= 3) {
       // 완전 공개
       return `<div class="analysis-card${i <= 1 ? ' wide' : ''}" style="animation-delay:${i*0.1}s">
@@ -1235,75 +1002,11 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo, strategy,
       </div>
     </div>`;
 
-  // ── 전략 배너 HTML ──
-  const strategyBanner = strategy ? `
-    <div class="strategy-banner">
-      <span class="sb-icon">${strategy.icon}</span>
-      <div class="sb-text">
-        <strong>${strategy.label}</strong> 분석 순서로 풀이합니다<br>
-        ${strategy.desc}
-      </div>
-    </div>` : '';
-
-  // ── AI 맞춤 풀이 카드 (Claude API 호출) ──
-  const aiCardId = 'ai-reading-' + Date.now();
-  const aiCardHTML = `
-    <div class="ai-reading-card" id="${aiCardId}">
-      <div class="card-title">
-        ✨ ${strategy ? strategy.aiSection : '맞춤 사주 풀이'}
-        <span class="ai-badge">AI 맞춤 분석</span>
-      </div>
-      <div class="card-body">
-        <div class="ai-loading">
-          <div class="ai-dots"><span></span><span></span><span></span></div>
-          사주 데이터를 바탕으로 맞춤 풀이를 생성하는 중...
-        </div>
-      </div>
-    </div>`;
-
-  // AI API 호출 (렌더 후 비동기 실행)
-  setTimeout(async () => {
-    const cardEl = document.getElementById(aiCardId);
-    if (!cardEl) return;
-    const bodyEl = cardEl.querySelector('.card-body');
-
-    const ohengStrong = balance.strong.map(o => SajuEngine.OHENG_CHAR[o]?.label || o).join(', ');
-    const ohengWeak = balance.weak.map(o => SajuEngine.OHENG_CHAR[o]?.label || o).join(', ');
-    const ilganInfo2 = SajuEngine.ILGAN_DESC[ilju.gan] || {};
-    const info = {
-      ilgan: ilju.gan,
-      ilganSymbol: ilganInfo2.symbol || '',
-      geokguk,
-      ohengStrong,
-      ohengWeak,
-      interests: (interests && interests.length > 0) ? interests.join(', ') : '전반적 운세',
-    };
-    const prompt = strategy ? strategy.buildPrompt(info) : info.interests;
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-      const json = await res.json();
-      const text = json.content?.find(c => c.type === 'text')?.text || '풀이를 생성할 수 없습니다.';
-      bodyEl.innerHTML = text.replace(/\n/g, '<br>');
-    } catch(e) {
-      bodyEl.innerHTML = '<span style="color:var(--muted);font-size:13px">맞춤 풀이 생성 중 오류가 발생했습니다.</span>';
-    }
-  }, 200);
-
   const html = `
     <div class="result-header">
       <h2>✦ 사주풀이 결과</h2>
       <p>${lunarLine}${birthStr}${cheoneulBanner}</p>
     </div>
-
-    ${strategyBanner}
 
     <div class="trust-strip">
       <div class="trust-item"><span class="t-num">3,142</span><span class="t-label">이번 달 분석</span></div>
@@ -1344,9 +1047,6 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo, strategy,
         * 월지(月支)에 있는 십성이 격국의 핵심이며, 삶의 방향성에 가장 큰 영향을 줍니다.
       </div>
     </div>
-
-    <!-- AI 맞춤 풀이 카드 -->
-    ${aiCardHTML}
 
     <!-- 분석 카드들 -->
     <div class="analysis-grid">
