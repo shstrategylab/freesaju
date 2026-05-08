@@ -698,26 +698,40 @@ function runAnalysis() {
 
 /* ── 결과 렌더링 ── */
 function renderResult(data, year, month, day, hour, gender) {
-  const { yeonju, wolju, ilju, siju, sipseongList, dist, balance, geokguk, reading } = data;
+  const { yeonju, wolju, ilju, siju, sipseong, dist, balance, geokguk, reading } = data;
 
   const OHENG_COLOR = { 목:'#4a7c59', 화:'#c0392b', 토:'#c8973a', 금:'#6b7a8d', 수:'#2c3e50' };
   const OHENG_CHAR  = SajuEngine.OHENG_CHAR;
   const SIPSEONG_I  = SajuEngine.SIPSEONG;
-  const pillars     = [
-    { label:'년주 (年柱)', sublabel:'조상·뿌리', data: yeonju, ss: sipseongList[0] },
-    { label:'월주 (月柱)', sublabel:'부모·환경', data: wolju,  ss: sipseongList[1] },
-    { label:'일주 (日柱)', sublabel:'본인·배우자', data: ilju,  ss: sipseongList[2] },
-    { label:'시주 (時柱)', sublabel:'자녀·미래',  data: siju,  ss: sipseongList[3] }
-  ];
+
+  // 각 주(柱)별 천간·지지 십성 구하기 (새 엔진: sipseong.detail 활용)
+  function getStemStar(pillarKey) {
+    // detail 에서 해당 위치 찾기
+    for (const [star, entries] of Object.entries(sipseong.detail)) {
+      if (entries.some(e => e.pos === pillarKey + ' 천간')) return star;
+    }
+    return '';
+  }
+  function getBranchStar(posLabel) {
+    for (const [star, entries] of Object.entries(sipseong.detail)) {
+      if (entries.some(e => e.pos === posLabel)) return star;
+    }
+    return '';
+  }
+
+  const pillarDefs = [
+    { label:'년주 (年柱)', sublabel:'조상·뿌리',   data: yeonju, stemStar: getStemStar('년주'),   branchStar: getBranchStar('년주 지지') },
+    { label:'월주 (月柱)', sublabel:'부모·환경',   data: wolju,  stemStar: getStemStar('월주'),   branchStar: getBranchStar('월지(핵심)') },
+    { label:'일주 (日柱)', sublabel:'본인·배우자', data: ilju,   stemStar: '일간(나)',             branchStar: getBranchStar('일지') },
+    { label:'시주 (時柱)', sublabel:'자녀·미래',   data: siju,   stemStar: getStemStar('시주'),   branchStar: getBranchStar('시주 지지') },
+  ].filter(p => p.data); // 시주 없을 경우 제외
 
   // ── 사주원국 테이블 HTML ──
-  let tableHeaders = pillars.map(p => `<th>${p.label}<br><small style="font-weight:300;color:var(--muted)">${p.sublabel}</small></th>`).join('');
-  let ganRow = pillars.map((p, i) => {
+  let tableHeaders = pillarDefs.map(p => `<th>${p.label}<br><small style="font-weight:300;color:var(--muted)">${p.sublabel}</small></th>`).join('');
+  let ganRow = pillarDefs.map((p, i) => {
     const oh = SajuEngine.CHEONGAN_OHENG[p.data.gan];
-    const isIlgan = i === 2;
-    const ssLabel = isIlgan ? '일간(나)' : p.ss.ganSipseong;
-    const ssInfo  = SIPSEONG_I[ssLabel] || {};
-    const ssCategory = ssInfo.category || '';
+    const isIlgan = p.stemStar === '일간(나)';
+    const ssLabel = p.stemStar || '';
     return `
       <td>
         <div class="pillar-cell">
@@ -730,10 +744,9 @@ function renderResult(data, year, month, day, hour, gender) {
       </td>`;
   }).join('');
 
-  let jiRow = pillars.map((p, i) => {
+  let jiRow = pillarDefs.map(p => {
     const oh = SajuEngine.JIJI_OHENG[p.data.ji];
-    const ssLabel = p.ss.jiSipseong;
-    const ssInfo  = SIPSEONG_I[ssLabel] || {};
+    const ssLabel = p.branchStar || '';
     return `
       <td>
         <div class="pillar-cell">
@@ -765,18 +778,14 @@ function renderResult(data, year, month, day, hour, gender) {
       <div class="card-body">${r.content}</div>
     </div>`).join('');
 
-  // ── 십성 분포 요약 ──
-  const ssSet = {};
-  sipseongList.forEach(s => {
-    [s.ganSipseong, s.jiSipseong].forEach(ss => {
-      if (ss && ss !== '일간(나)' && ss !== '?') ssSet[ss] = (ssSet[ss] || 0) + 1;
-    });
-  });
-  const ssTags = Object.entries(ssSet).map(([ss, cnt]) => {
-    const info = SIPSEONG_I[ss] || {};
-    const cat  = info.category || '';
-    return `<span class="sipseong-tag ${cat}" title="${info.detail || ''}">${ss} ×${cnt}</span>`;
-  }).join('');
+  // ── 십성 분포 요약 (새 엔진: sipseong.count 사용) ──
+  const ssTags = Object.entries(sipseong.count)
+    .filter(([, cnt]) => cnt > 0)
+    .map(([ss, cnt]) => {
+      const info = SIPSEONG_I[ss] || {};
+      const cat  = info.category || '';
+      return `<span class="sipseong-tag ${cat}" title="${info.detail || ''}">${ss} ×${cnt}</span>`;
+    }).join('');
 
   const geokInfo = SajuEngine.GEOKGUK[geokguk] || {};
 
