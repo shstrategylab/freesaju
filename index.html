@@ -717,7 +717,7 @@
 
 /**
  * 음력 → 양력 변환 (korean-lunar-calendar 라이브러리 사용)
- * 기존 LUNAR_DATA의 monthBits 오류를 우회하여 정확한 변환 보장
+ * 역변환 정합성 검증으로 잘못된 날짜(없는 윤달 등)를 정확히 걸러냄
  */
 function lunarToSolar(ly, lm, ld, isLeap) {
   try {
@@ -725,6 +725,15 @@ function lunarToSolar(ly, lm, ld, isLeap) {
     cal.setLunarDate(ly, lm, ld, isLeap ? 1 : 0);
     const sol = cal.getSolarCalendar();
     if (!sol || !sol.year) return null;
+
+    // 역변환으로 정합성 검증: 잘못된 날짜·없는 윤달 걸러내기
+    const cal2 = new KoreanLunarCalendar();
+    cal2.setSolarDate(sol.year, sol.month, sol.day);
+    const lunar = cal2.getLunarCalendar();
+    if (!lunar) return null;
+    if (lunar.year !== ly || lunar.month !== lm || lunar.day !== ld) return null;
+    if (!!lunar.intercalation !== !!isLeap) return null;
+
     return { year: sol.year, month: sol.month, day: sol.day };
   } catch(e) {
     return null;
@@ -734,22 +743,15 @@ function lunarToSolar(ly, lm, ld, isLeap) {
 /** 해당 음력 연도·월의 마지막 일 반환 */
 function lunarLastDay(ly, lm, isLeap) {
   try {
-    const cal = new KoreanLunarCalendar();
-    cal.setLunarDate(ly, lm, 30, isLeap ? 1 : 0);
-    const sol = cal.getSolarCalendar();
-    if (sol && sol.year) return 30;
+    // 30일이 역변환까지 통과하면 30일 달, 아니면 29일 달
+    if (lunarToSolar(ly, lm, 30, isLeap)) return 30;
   } catch(e) {}
   return 29;
 }
 
 /** 해당 음력 연도에 특정 월의 윤달이 있는지 */
 function hasLeapMonth(ly, lm) {
-  try {
-    const cal = new KoreanLunarCalendar();
-    cal.setLunarDate(ly, lm, 1, 1);
-    const sol = cal.getSolarCalendar();
-    return !!(sol && sol.year);
-  } catch(e) { return false; }
+  return !!lunarToSolar(ly, lm, 1, true);
 }
 </script>
 <script>
