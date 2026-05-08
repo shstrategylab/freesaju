@@ -875,52 +875,47 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
   const geokInfo = SajuEngine.GEOKGUK[geokguk] || {};
   const ilganInfo = SajuEngine.ILGAN_DESC[ilju.gan] || {};
 
-  // ── 분석 카드: 엔진이 실제로 계산하는 것은 전부 공개 ──
-  // index 0: 타고난 성품 → 완전 공개
-  // index 1: 삶의 틀(격국) → 완전 공개
-  // index 2: 오행 균형 → 완전 공개 (엔진 계산값)
-  // index 3: 적합한 직업군 → 완전 공개 (격국 기반 단순 매핑)
-  // index 4: 대인관계 스타일 → 첫 줄 공개 + 부분 잠금 (엔진 계산이지만 짧은 텍스트)
+  // ── 분석 카드: 엔진 계산값 기반 — 모두 완전 공개 (실력 증명 전략)
+  // 0: 타고난 성품, 1: 사주 핵심 구조(일간×격국), 2: 신강/신약
+  // 3: 오행 과부족 패턴, 4: 연애·결혼 스타일, 5: 월지 핵심 십성
+  const WIDE_CARDS = new Set([0, 1]);
 
   const readingCards = reading.map((r, i) => {
-    if (i <= 3) {
-      // 완전 공개
-      return `<div class="analysis-card${i <= 1 ? ' wide' : ''}" style="animation-delay:${i*0.1}s">
-        <div class="card-title">${r.title}</div>
-        <div class="card-body">${r.content}</div>
-      </div>`;
-    } else {
-      // 대인관계: 첫 문장만 + 부분 잠금 (심층 내용은 유료)
-      const preview = r.content;
-      const teaser = `${gender === '남' ? '남성' : '여성'} 일간에서 나타나는 연애·대인 패턴, 궁합이 맞는 유형과 피해야 할 유형, 관계에서 반복되는 흐름은 유료 심층 풀이에서 확인하실 수 있습니다.`;
-      return `<div class="analysis-card" style="animation-delay:${i*0.1}s">
-        <div class="card-title">${r.title}</div>
-        <div class="card-body">
-          <div class="card-body-partial">
-            <span class="preview-text">${preview}</span>
-            <span class="blur-layer">${teaser}</span>
-          </div>
-          <div class="partial-lock-banner" onclick="scrollToPaywall()">
-            <span class="plb-icon">🔐</span>
-            <span>궁합·관계 심층 분석 → 유료 풀이에서 확인</span>
-          </div>
-        </div>
-      </div>`;
-    }
+    const wide = WIDE_CARDS.has(i) ? ' wide' : '';
+    return `<div class="analysis-card${wide}" style="animation-delay:${i*0.12}s">
+      <div class="card-title">${r.title}</div>
+      <div class="card-body">${r.content}</div>
+    </div>`;
   }).join('');
 
-  // ── 추가 잠금 카드 (엔진 미구현 항목) ──
+  // ── 추가 잠금 카드 (유료 전용 — 더 구체적인 티저) ──
+  const financeSS = sipseong.score['편재'] > sipseong.score['정재'] ? '편재(偏財)' : '정재(正財)';
+  const healthOh  = (() => {
+    const map = { 목:'간·담', 화:'심장·소장', 토:'비장·위장', 금:'폐·대장', 수:'신장·방광' };
+    const weakest = Object.entries(dist).sort((a,b)=>a[1]-b[1])[0][0];
+    return `${OHENG_CHAR[weakest].label}(${map[weakest]})`;
+  })();
+
   const bonusLocked = [
-    { title: '💕 연애·결혼 인연법', teaser: `${ilju.gan}일간이 만나야 할 인연의 천간·지지 조합이 있습니다. 정재(正財)·정관(正官)의 위치에서 인연이 드러납니다. 귀인이 들어오는 시기는...` },
-    { title: '💰 재물·사업운', teaser: '재성(財星)의 위치와 오행 흐름으로 재물이 쌓이는 패턴을 읽을 수 있습니다. 편재와 정재의 힘 중 어느 쪽이 강한지에 따라 수입 방식이 달라집니다. 가장 유리한 시기는...' },
-    { title: '🩺 건강 주의 시기', teaser: '오행의 과부족(過不足)은 특정 장기의 취약점과 연결됩니다. 주의해야 할 건강 패턴과 보완법은...' },
+    {
+      title: '💰 재물·사업운 심층 분석',
+      teaser: `이 사주는 <strong>${financeSS}</strong> 계열이 두드러집니다. ${financeSS === '편재(偏財)' ? '큰 기회를 잡는 대범함이 재물의 원천이지만, 변동성도 큽니다.' : '성실하고 꼼꼼한 관리가 재물을 쌓는 핵심입니다.'} 재물이 가장 강하게 들어오는 시기와 조심해야 할 시기, 맞는 투자 방식은...`,
+    },
+    {
+      title: '🩺 건강 주의 패턴',
+      teaser: `오행 분포상 <strong>${healthOh}</strong> 계통이 가장 약한 지점으로 나타납니다. 이 기운이 흔들리는 대운·세운에 해당 장기 관련 증상이 나타날 수 있습니다. 구체적인 주의 시기와 보완 방법은...`,
+    },
+    {
+      title: '🌊 대운(大運) 10년 흐름 전체 해석',
+      teaser: `${ilju.gan}일간 ${geokguk}의 대운은 단순히 길흉이 아니라 "어떤 기운이 들어와 내 사주와 어떻게 반응하는가"로 읽습니다. 현재 대운이 내 사주를 도와주는지, 충돌하는지, 그리고 2025·2026년 세운과의 겹침은...`,
+    },
   ].map((c, i) => `
-    <div class="analysis-card locked wide" style="animation-delay:${(i + reading.length) * 0.1}s">
+    <div class="analysis-card locked wide" style="animation-delay:${(i + reading.length) * 0.12}s">
       <div class="card-title">${c.title}</div>
       <div class="card-body">${c.teaser}</div>
       <div class="lock-overlay" onclick="scrollToPaywall()">
         <div class="lock-icon">🔒</div>
-        <div class="lock-label">유료 심층 분석 항목<small>약식 풀이에서는 볼 수 없는 내용입니다</small></div>
+        <div class="lock-label">유료 심층 분석 항목<small>무료 풀이에서는 볼 수 없는 정밀 해석입니다</small></div>
         <button class="lock-btn">지금 확인하기</button>
       </div>
     </div>`).join('');
