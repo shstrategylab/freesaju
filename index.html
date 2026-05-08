@@ -925,9 +925,9 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
 
   // 오행 배경색·글씨색 — 목:녹색, 화:빨강, 토:황토, 금:흰색, 수:검정
   // 배경: 오행 고유 색의 연한(10~15%) 톤, 글씨: 오행 고유 진한 색
-  const OHENG_BG   = { '목':'rgba(60,140,80,0.13)',  '화':'rgba(192,57,43,0.12)',  '토':'rgba(184,134,11,0.13)', '금':'rgba(230,230,230,0.55)', '수':'rgba(28,28,46,0.88)' };
-  const OHENG_TEXT = { '목':'#2e7d32',               '화':'#c0392b',               '토':'#8a6200',              '금':'#4a4a4a',                '수':'#f0f0f0' };
-  const OHENG_BORDER = { '목':'1.5px solid #2e7d32', '화':'1.5px solid #c0392b',  '토':'1.5px solid #b8860b',  '금':'1.5px solid #999999',    '수':'1.5px solid #3a3a5a' };
+  const OHENG_BG     = { '목':'#3a7d44', '화':'#c0392b', '토':'#b8860b', '금':'#f5f5f5', '수':'#1c1c2e' };
+  const OHENG_TEXT   = { '목':'#ffffff', '화':'#ffffff', '토':'#ffffff', '금':'#222222', '수':'#ffffff' };
+  const OHENG_BORDER = { '목':'none', '화':'none', '토':'none', '금':'1.5px solid #aaaaaa', '수':'none' };
 
   // 엔진이 반환하는 오행 키를 정규화 (한자/혼합 표기 대비)
   const OH_NORM = {
