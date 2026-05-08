@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사주풀이 — 무료 약식 분석</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+  /* ── CSS 변수 ── */
+  :root {
+    --ink:      #1a1410;
+    --paper:    #f5f0e8;
+    --paper2:   #ede6d6;
+    --gold:     #c8973a;
+    --gold-lt:  #e8c87a;
+    --rust:     #8b3a2a;
+    --sage:     #4a6741;
+    --navy:     #1e2d4a;
+    --muted:    #6b5e4e;
+    --border:   rgba(0,0,0,.12);
+    --card-bg:  rgba(255,255,255,.55);
+    --shadow:   0 4px 24px rgba(0,0,0,.10);
+
+    --목: #4a7c59;
+    --화: #c0392b;
+    --토: #c8973a;
+    --금: #d0d0d0;
+    --수: #2c3e50;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── 배경 패턴 ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(200,151,58,.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(139,58,42,.06) 0%, transparent 50%),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c8973a' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+
+  /* ── 레이아웃 ── */
+  .wrap {
+    position: relative; z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+  }
+
+  /* ── 헤더 ── */
+  header {
+    text-align: center;
+    padding: 60px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  .header-badge {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: .18em;
+    color: var(--gold);
+    border: 1px solid var(--gold-lt);
+    padding: 5px 16px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    background: rgba(200,151,58,.06);
+  }
+
+  header h1 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 700;
+    letter-spacing: .06em;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+
+  header h1 span { color: var(--gold); }
+
+  header p {
+    margin-top: 14px;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* ── 입력 카드 ── */
+  .input-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px 48px;
+    box-shadow: var(--shadow);
+    margin-bottom: 40px;
+  }
+
+  .input-card h2 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 28px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 28px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: .08em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  select, input[type="number"], input[type="date"] {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 15px;
+    color: var(--ink);
+    background: white;
+    border: 1.5px solid rgba(0,0,0,.14);
+    border-radius: 10px;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b5e4e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+
+  select:focus, input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(200,151,58,.15);
+  }
+
+  .gender-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  .gender-btn {
+    flex: 1;
+    padding: 12px;
+    border: 1.5px solid rgba(0,0,0,.14);
+    border-radius: 10px;
+    background: white;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s;
+    text-align: center;
+  }
+
+  .gender-btn.active {
+    border-color: var(--gold);
+    background: rgba(200,151,58,.08);
+    color: var(--gold);
+    font-weight: 500;
+  }
+
+  .hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    margin-top: 28px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--gold) 0%, #a87020 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Noto Serif KR', serif;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s, opacity .2s;
+    box-shadow: 0 4px 16px rgba(200,151,58,.35);
+  }
+
+  .submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(200,151,58,.45);
+  }
+
+  .submit-btn:active { transform: translateY(0); }
+
+  /* ── 로딩 ── */
+  #loading {
+    display: none;
+    text-align: center;
+    padding: 60px 0;
+  }
+
+  .spinner {
+    width: 44px; height: 44px;
+    border: 3px solid rgba(200,151,58,.2);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    margin: 0 auto 16px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── 결과 영역 ── */
+  #result { display: none; }
+
+  .result-header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .result-header h2 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .result-header p {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* ── 사주원국 테이블 ── */
+  .saju-table-wrap {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: var(--shadow);
+    margin-bottom: 32px;
+    overflow-x: auto;
+  }
+
+  .saju-table-title {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .saju-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 10px;
+    text-align: center;
+  }
+
+  .saju-table th {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .1em;
+    color: var(--muted);
+    padding: 6px 0;
+  }
+
+  .pillar-cell {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 12px;
+    min-width: 90px;
+  }
+
+  .pillar-cell .sipseong-badge {
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--paper2);
+    border-radius: 20px;
+    padding: 2px 10px;
+    display: inline-block;
+    margin-bottom: 10px;
+    letter-spacing: .05em;
+  }
+
+  .pillar-cell .char {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 28px;
+    font-weight: 700;
+    display: block;
+    line-height: 1.2;
+    text-align: center;
+  }
+  /* 한자 배경 뱃지 정렬 */
+  .pillar-cell .char[style*="background"] {
+    display: inline-block !important;
+    min-width: 44px;
+    text-align: center;
+  }
+
+  .pillar-cell .char.ilgan-char {
+    /* color는 ganStyle inline에서 직접 지정 */
+  }
+
+  .pillar-cell .oheng-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  .pillar-cell .oheng-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* ── 오행 분포 ── */
+  .oheng-bars {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    height: 80px;
+    padding: 0 4px;
+    margin-top: 20px;
+  }
+
+  .oheng-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .oheng-bar {
+    width: 100%;
+    border-radius: 6px 6px 0 0;
+    transition: height .6s cubic-bezier(.4,0,.2,1);
+    min-height: 4px;
+  }
+
+  .oheng-bar-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .oheng-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* ── 분석 카드들 ── */
+  .analysis-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+
+  .analysis-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    animation: fadeUp .5s ease both;
+  }
+
+  .analysis-card.wide {
+    grid-column: 1 / -1;
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(16px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  .card-title {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-body {
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.75;
+  }
+
+  .card-body strong { color: var(--rust); font-weight: 600; }
+  .card-body em { color: var(--sage); font-style: normal; font-weight: 500; }
+
+  /* ── 십성 태그 ── */
+  .sipseong-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .sipseong-tag {
+    font-size: 12px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .sipseong-tag.비겁 { border-color: var(--목); color: var(--목); background: rgba(74,124,89,.06); }
+  .sipseong-tag.식상 { border-color: var(--화); color: var(--화); background: rgba(192,57,43,.06); }
+  .sipseong-tag.재성 { border-color: var(--토); color: #9a6800; background: rgba(200,151,58,.08); }
+  .sipseong-tag.관성 { border-color: var(--금); color: var(--금); background: rgba(107,122,141,.06); }
+  .sipseong-tag.인성 { border-color: var(--수); color: var(--수); background: rgba(44,62,80,.06); }
+
+  /* ── 유료 CTA ── */
+  .cta-box {
+    background: linear-gradient(135deg, var(--navy) 0%, #0d1e3d 100%);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    color: white;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(30,45,74,.35);
+  }
+
+  .cta-box::before {
+    content: '✦';
+    position: absolute;
+    font-size: 180px;
+    opacity: .04;
+    top: -30px; right: -20px;
+    font-family: serif;
+  }
+
+  .cta-box h3 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: .04em;
+  }
+
+  .cta-box p {
+    font-size: 14px;
+    opacity: .75;
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  .cta-features {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+
+  .cta-feature {
+    font-size: 13px;
+    opacity: .85;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cta-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--gold) 0%, #a87020 100%);
+    color: white;
+    padding: 14px 40px;
+    border-radius: 12px;
+    font-family: 'Noto Serif KR', serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 4px 16px rgba(200,151,58,.4);
+    transition: transform .15s, box-shadow .15s;
+  }
+
+  .cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(200,151,58,.5);
+  }
+
+  /* ── 면책 안내 ── */
+  .disclaimer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.7;
+    padding: 0 20px;
+  }
+
+  /* ── 반응형 ── */
+  @media (max-width: 600px) {
+    .input-card { padding: 28px 20px; }
+    .form-grid  { grid-template-columns: 1fr; }
+    .analysis-grid { grid-template-columns: 1fr; }
+    .analysis-card.wide { grid-column: 1; }
+    .saju-table-wrap { padding: 20px 12px; }
+    .cta-box { padding: 28px 20px; }
+    .cta-features { flex-direction: column; gap: 10px; align-items: center; }
+  }
+
+  /* ── 양력/음력 토글 ── */
+  .cal-toggle {
+    display: flex;
+    gap: 0;
+    border: 1.5px solid rgba(0,0,0,.14);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    width: fit-content;
+  }
+  .cal-toggle-btn {
+    flex: 1;
+    min-width: 88px;
+    padding: 10px 20px;
+    border: none;
+    background: white;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .18s;
+    letter-spacing: .04em;
+  }
+  .cal-toggle-btn:first-child { border-right: 1.5px solid rgba(0,0,0,.10); }
+  .cal-toggle-btn.active {
+    background: var(--gold);
+    color: #fff;
+    font-weight: 600;
+  }
+  .lunar-extra {
+    display: none;
+    margin-top: -8px;
+    margin-bottom: 4px;
+  }
+  .lunar-extra.show { display: block; }
+  .lunar-converted {
+    font-size: 12px;
+    color: var(--sage);
+    background: rgba(74,103,65,.08);
+    border: 1px solid rgba(74,103,65,.2);
+    border-radius: 8px;
+    padding: 8px 14px;
+    margin-top: 10px;
+    display: none;
+  }
+  .lunar-converted.show { display: block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ── 헤더 ── -->
+  <header>
+    <div class="header-badge">無料 약식 사주풀이</div>
+    <h1>나의 <span>사주원국</span> 분석</h1>
+    <p>태어난 연·월·일·시를 입력하면 사주팔자를 자동으로 분석합니다.<br>
+    본 서비스는 명리학의 핵심 이론을 기반으로 한 약식 풀이입니다.</p>
+  </header>
+
+  <!-- ── 입력 폼 ── -->
+  <div class="input-card">
+    <h2>⊕ 생년월일시 입력</h2>
+
+    <!-- 양력/음력 토글 -->
+    <div class="cal-toggle">
+      <button class="cal-toggle-btn active" id="btn-solar" onclick="setCalType('solar')">☀️ 양력</button>
+      <button class="cal-toggle-btn" id="btn-lunar" onclick="setCalType('lunar')">🌙 음력</button>
+    </div>
+    <!-- 윤달 여부 (음력 선택 시만 표시) -->
+    <div class="lunar-extra" id="lunar-extra">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer">
+        <input type="checkbox" id="inp-leap" style="width:16px;height:16px;accent-color:var(--gold)">
+        윤달(閏月)입니다
+      </label>
+    </div>
+    <!-- 변환된 양력 표시 -->
+    <div class="lunar-converted" id="lunar-converted"></div>
+
+    <div class="form-grid">
+
+      <div class="form-group">
+        <label>출생 연도</label>
+        <input type="number" id="inp-year" placeholder="예) 1990" min="1900" max="2025" value="">
+      </div>
+
+      <div class="form-group">
+        <label>출생 월</label>
+        <select id="inp-month">
+          <option value="">월 선택</option>
+          <option value="1">1월</option><option value="2">2월</option>
+          <option value="3">3월</option><option value="4">4월</option>
+          <option value="5">5월</option><option value="6">6월</option>
+          <option value="7">7월</option><option value="8">8월</option>
+          <option value="9">9월</option><option value="10">10월</option>
+          <option value="11">11월</option><option value="12">12월</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>출생 일</label>
+        <select id="inp-day">
+          <option value="">일 선택</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>출생 시간</label>
+        <select id="inp-hour">
+          <option value="">시간 선택</option>
+          <option value="0">자시 (23:00~01:00)</option>
+          <option value="1">축시 (01:00~03:00)</option>
+          <option value="3">인시 (03:00~05:00)</option>
+          <option value="5">묘시 (05:00~07:00)</option>
+          <option value="7">진시 (07:00~09:00)</option>
+          <option value="9">사시 (09:00~11:00)</option>
+          <option value="11">오시 (11:00~13:00)</option>
+          <option value="13">미시 (13:00~15:00)</option>
+          <option value="15">신시 (15:00~17:00)</option>
+          <option value="17">유시 (17:00~19:00)</option>
+          <option value="19">술시 (19:00~21:00)</option>
+          <option value="21">해시 (21:00~23:00)</option>
+        </select>
+        <div class="hint">* 정확한 시간을 모르면 선택하지 않아도 됩니다</div>
+      </div>
+
+      <div class="form-group full">
+        <label>성별</label>
+        <div class="gender-row">
+          <button class="gender-btn active" data-gender="남" onclick="selectGender(this)">♂ 남성</button>
+          <button class="gender-btn" data-gender="여" onclick="selectGender(this)">♀ 여성</button>
+        </div>
+      </div>
+
+    </div>
+    <button class="submit-btn" onclick="runAnalysis()">✦ 사주 분석 시작</button>
+  </div>
+
+  <!-- ── 로딩 ── -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p style="color:var(--muted);font-size:14px">사주원국을 분석하는 중...</p>
+  </div>
+
+  <!-- ── 결과 ── -->
+  <div id="result"></div>
+
+</div>
+
+<!-- 사주 엔진 -->
+<script src="saju-engine.js"></script>
+<!-- 음력↔양력 변환: 한국천문연구원 검증 라이브러리 -->
+<script>
+/* korean-lunar-calendar 인라인 (CDN 의존성 제거) */
+var KoreanLunarCalendar=function(){"use strict";var a={KOREAN_LUNAR_MIN_VALUE:10000101,KOREAN_LUNAR_MAX_VALUE:20501118,KOREAN_SOLAR_MIN_VALUE:10000213,KOREAN_SOLAR_MAX_VALUE:20501231,KOREAN_LUNAR_BASE_YEAR:1e3,SOLAR_LUNAR_DAY_DIFF:43,LUNAR_SMALL_MONTH_DAY:29,LUNAR_BIG_MONTH_DAY:30,SOLAR_SMALL_YEAR_DAY:365,SOLAR_BIG_YEAR_DAY:366,SOLAR_DAYS:[31,28,31,30,31,30,31,31,30,31,30,31,29],KOREAN_CHEONGAN:[44049,51012,48337,51221,47924,44592,44221,49888,51076,44228].map((function(a){return String.fromCharCode(a)})),KOREAN_GANJI:[51088,52629,51064,47896,51652,49324,50724,48120,49888,50976,49696,54644].map((function(a){return String.fromCharCode(a)})),KOREAN_GAPJA_UNIT:[45380,50900,51068].map((function(a){return String.fromCharCode(a)})),CHINESE_CHEONGAN:[30002,20057,19993,19969,25098,24049,24218,36763,22764,30328].map((function(a){return String.fromCharCode(a)})),CHINESE_GANJI:[23376,19985,23493,21359,36784,24051,21320,26410,30003,37193,25100,20133].map((function(a){return String.fromCharCode(a)})),CHINESE_GAPJA_UNIT:[24180,26376,26085].map((function(a){return String.fromCharCode(a)})),INTERCALATION_STR:[50980,38287].map((function(a){return String.fromCharCode(a)})),KOREAN_LUNAR_DATA:[2194016855,2197734699,2193886506,2194017621,3271595437,2193884522,2194016621,2197837021,3267626157,2193885773,2197827149,2193885990,3271600982,2194016981,2193883994,2197842298,3267758427,2193884315,2197834395,2193885771,3271674533,2193884842,2194016981,2197852893,3267625653,2194016599,2197705902,2194017431,3267626571,2197759306,2194017705,2197857974,3267757677,2193883758,2197907758,2193885486,3267628182,2197835157,2193886538,2197867881,3267627864,2194148715,2197918315,2193883741,3267627307,2197838507,2193885845,2193886026,3271696043,2193883861,2197927258,2194015419,3267625563,2197845303,2193884459,2193884821,3271571285,2193884842,2198063797,2193883765,3267626166,2197850718,2193885782,2193886502,3271581350,2194017621,2193884586,2197822826,3267758445,2197861551,2193884317,2193885773,3271589165,2193885862,2194017109,2197833173,3267625818,2194016605,2197885299,2193884251,3271596623,2193884747,2193885861,2197842793,3267757749,2193883866,2197826230,2194016567,3271476375,2194017431,2193884747,2197718698,3267759525,2193884596,2198030957,2193883822,3267628641,2197826862,2193886358,2197855565,2193886538,2194017637,2197906837,2194015581,3267625581,2197826141,2193885483,2197858967,3267627669,2193886026,2197850970,2194016981,3267757403,2197832375,2193884247,2193884459,3271564587,2193884821,2197853997,2193884586,3267758773,2197837037,2193884342,2194016855,3271504974,2193886502,2197929618,2194017621,3267626410,2197850554,2194016621,2193884334,3271576221,2193885773,2193886501,2197827365,3267627860,2198056297,2193883866,2194016605,3271648411,2193884315,2193885771,2197834571,3267626661,2197863251,2193884852,2194016950,3271657814,2194016663,2193884311,2197833367,3267626315,2197735077,2194017701,2193884588,3271797429,2193883758,2193885486,2197843118,3267628182,2193886538,2197827402,2194017621,3271603563,2194015579,2193883741,2197846333,3267627303,2193885845,2197904661,2193886026,3267758933,2197885653,2194015451,2197721694,3267758679,2193884459,2197842603,2193884821,3267626666,2197830570,2194016949,2197861559,3267626158,2194016855,2197714222,2193886502,3267759763,2197837525,2193884586,2194016693,3271566701,2193884334,2197924429,2193885773,3267628326,2197843301,2193886034,2194017642,3271567066,2194016605,2197931165,2193884315,3267627595,2197850795,2193884837,2193886036,3271576500,2194016950,2194016603,2197824823,3267626135,2197853775,2193884491,2193884837,3271653061,2193884588,2194016950,2197895278,3267627310,2197867671,2193886358,2193886538,3271593386,2194017109,2193884522,2197969627,3267625565,2193885486,2197826859,2193885845,3271597389,2193885994,2194017109,2197845365,3267626202,2194016859,2197833047,2193884459,3271674515,2193884819,2193884842,2197850842,3267758821,2193884342,2197834414,2194016855,3267626279,2197759270,2194017875,2197857995,3267626410,2194015661,2197906605,2193884334,3267627598,2197835085,2193886502,2197863763,3267627858,2194017130,2197919082,2194015575,3267626141,2197903899,2193885771,2193885861,3271564965,2193886034,2197863258,2194016950,3267758427,2197841079,2193884311,2193884747,3271571275,2193884837,2197862067,2193884588,3267758774,2197914285,2193884318,2193885773,3271581003,2193885989,2193886034,2197892690,3267758938,2197858654,2194016603,2193884315,3271584343,2193885771,2193885861,2197834661,3267626708,2197867222,2194016950,2194016567,2197849247,2193884311,2193884747,2197706442,3267759525,2193884586,2197822828,2194016878,3271604527,2193885486,2193886358,2197847381,3267628362,2194017621,2197894485,2193884522,3267758701,2197822045,2193885483,2197850715,3267627669,2193885994,2197904170,2194016981,3267626202,2197822650,2194016855,2197853487,3267626279,2193884819,2197845683,2193884842,3267758773,2197828981,2193884342,2197867111,3267627566,2193886486,2197851798,2193886538,3267759530,2197837290,2194015597,2193884334,3271632989,2193885741,2197859607,2193885861,3267627858,2197847412,2194016986,2194015581,3271570747,2193884251,2193885739,2197887531,3267627685,2197855061,2193884850,2194016982,3271644470,2194016567,2193884247,2197830231,3267626283,2197727910,2194017685,2193884586,3271654060,2194016878,2193884462,2197830830,3267627606,2197863723,2193886506,2194017621,3271595437,2193884522,2194016877,2197837149,3267626283,2193885837,2197827157,2193885994,3271600982,2194016981,2193884378,2197842554,3267758679,2193884443,2197899799,2193884755,3271673513,2193884586,2194016949,2197852861,3267625654,2194016823,2197706030,2193886486,2194017867,2197698386,2194017706,2197927348,3267757421,2193883822,2197846589,2193885741,3267628309,2197835157,2193886034,2197867369,3267758810,2194015581,2197918299,2193884251,3267627563,2197838507,2193885845,2193886034,3271564970,2194016950,2197865819,2194015415,3267626071,2197845303,2193884459,2193884821,3271640725,2193884586,2197867189,2194016878,3267626158,2197850718,2193885782,2193886506,3271585450,2194017621,2193884522,2197891418,3267758429,2197861551,2193884315,2193885773,3271589165,2193885994,2194017109,2197833173,3267625690,2194016603,2197885271,2193884315,3271596623,2193884747,2193884841,2197842666,3267757749,2193883830,2197826222,2194016567,3271537814,2193886358,2194017867,2197714610,3267759530,2194015661,2197828461,2193883758,3267627310,2197826861,2193886357,2197855565,3267627850,2194017129,2197906778,2194015579,3267625565,2197826139,2193885483,2197858967,3267626645,2193885002,2197850970,2194016950,3267757371,2197832375,2193883735,2193884459,3271564587,2193884821,2197853869,2193884586,3267758773,2197837037,2193884334,2194016855,3271504974,2193886506,2197929364,2194017109,2193884522,2197846394,2194016605,2193884334,3271576219,2193885773,2193886501,2197887658,3267758933,2197853549,2193883866,2194016603,3271578807,2193884311,2193885771,2197834571,3267626665,2197867221,2194015669,2193883830,3271592286,2194016559,2193884311,2197702294,3267628362,2197868197,2194017641,2194015597,3271664309,2193883758,2193885486,2197843117,3267628181,2193886538,2197827402,2194017113,3271607661,2194015579,2193883741,2197846331,3267627307,2193885845,2197904149,2193884874,3267758805,2197885622,2194015419,2197852767,3267625559,2193884459,2197711530,2194017941,3267626666,2197830570,2194016949,2197861559,3267626158,2194016855,2197714221,2193886502,3267759509,2197837269,2193884522,2194016621,3271566685,2193884334,2197858895,2193885773,3267628325,2197843305,2194017109,2193883994,3271568058,2194016603,2197931163,2193884311,3267627595,2197850923,2193884837,2193884884,3271772853,2193883830,2194016567,2197824815,3267626135,2197722702,2193886538,2194017957,3271648937,2194015597,2193883830,2197895262,3267627310,2197863575,2193885845,2193886538,3271593386,2194017101,2194015595,2197832411,3267625565,2193885485,2197826859,2193885845,3271596877,2193884842,2194016981,2197841269,3267757243,2193883739,2197894231,2193884459,3271539348,2194017941,2193884842,2197850842,3267758517,2193884342,2197834414,2194016847,3267495206,2197892390,2194017621,2197923241,3267626346,2194016621,2197906589,2193884318,3267627597,2197835085,2193886501,2197863763,3267627860,2194017114,2197915994,2194016603,3267626139,2197834391,2193885771,2193885861,3271564965,2193884884,2197994203,2193883830,3267758391,2197841071,2193884311,2193884747,3271440202,2194017701,2197862069,2194015597,3267625646,2197846334,2193885486,2193886358,3271646485,2193886538,2194017701,2197894485,3267626346,2197846650,2194016861,2193885485,3271584427,2193885845,2193886026,2197834666,3267758805,2193884506,2197891258,2194016859,3271587127,2193884459,2193884819,2197903125,3267626666,2194016981,2197829045,2193884342,3271592542,2193885774,2193886502,2197843622,3267628370,2194017706,2197898858,2194015597,3267626158,2197830301,2193885773,2197847339,3267627813,2193886546,2197904724,2194017114,3267757405,2197828955,2193884315,2197845591,2193885771,2193885861,2197842789,2193884882,3267758810,2197833142,2194016567,2193884311,3271571095,2193884749,2197714602,2194017701,3267626410,2197838572,2194016942,2193885486,3271572782,2193886358,2197916997,2193886538,3267759445,2197906837,2193884522,2194016877,3271574877,2193884461,2193885845,2197896341,3267627850,2197912394,2194016981,2193884506,3271645754,2194016859,2193884459,2197899799,3267626643,2197853867,2193884842,2194016949,3271582965,2193884342,2194016855,2197701934,3267628310,2194017939,2197698386,2194017706,3271652778,2194015597,2193884334,2197903901,3267627565,2193886485,2197835173,2193886034,3271597418,2194016986,2194015581,2197906075,3267626075,2193885739,2197838635,2193885845,3267627858,2197891762,2194016982,2197910870,3267757367,2193884247,2197837399,2193884459,3267626645,2197829525,2193884586,2197858998,3267758701,2193884334,2197842542,2193885782,3267628330,2197839530,2194017621,2193884586,3271572330,2194016877,2197845181,2193884331,3267627661,2197839189,2193885994,2194017109,3271574997,2193884378,2194016605,2197824855,3267626139,2197842583,2193884747,2193884841,2197834666,2194015925,2193883834,2197826230,3267758391,2197710126,2193886486,2194017867,3271448274,2194017705,2194015669,2197828461,3267625646,2193885742,2197827117,2193886357,3271585109,2193886034,2194017129,2197833178,3267757405,2193883741,2197830235,2193885739,3271654027,2193885845,2193886026,2197904170,3267758805,2194015579,2197832375,2193883735,3271595311,2193884459,2193884821,2197841621,3267626410,2194016949,2197833069,2193884334,3267758679,2197763158,2193886506,2197913226,3267759445,2193884586,2197838554,2194016605,3267626158,2197834411,2193885773,2197851435,3267627817,2194017109,2197845365,2193883866,3267758429,2197837015,2193884315,2193885771,3271637579,2193884841,2197850841,2194015925,3267625654,2197903670,2194016567,2193884311,3271444118,2193886794,2197860006,2194017705,3267757485,2197906093,2193883822,2193885486,3271580845,2193886357,2193886538,2197896522,3267758953,2197845370,2194015579,2193883741,3271579995,2193885483,2193885845,2197835157,3267627850,2194017109,2197825237,2194015579,3271582327,2193883735,2193884459,2197707434,3267759765,2193884842,2197830570,2194016949,2197849277,2193884334,2194016855,2197706061,3267628326,2194017685,2197898837,2193884522,3267758509,2197824861,2193884334,2197842523,3267627597,2193886501,2197839273,2194017109,3267626346,2197826266,2194016605,2197845179,3267626139,2193885771,2197838667,2193884841,3267627732,2197965749,2193883830,2194016603,3271566647,2193884311,2197710422,2193886794,3267759781,2197903017,2194015669,2193883830,3271637166,2193885486,2197912717,2193886357,3267628362,2197908874,2194017129,2194015597,3271639643,2193883741,2193885485,2197826859,3267627669,2197847381,2193886026,2194017109,3271644501,2194015451,2193883739,2197895255,3267626283,2197850779,2193884821,2193884842,3271584490,2194016949,2193884342,2197834414,3267758679,2193884455,2197698342,2194017685,3271587509,2193884522,2194016685,2197837021,3267626158,2193885774,2197835085,2193886501,3271593305,2193886036,2194017642,2197907802,3267758427,2193884315,2197834395,2193885771,3271600935,2193884837,2193884884,2197973877,3267625654,2194016603,2197836983,2193884311,3267626571,2197698378,2194017957,2197849817,3267757485,2193883830,2197838190,2193885486,3267628182,2197835413,2193886538,2194017701,3271567189,2193884524,2197977787,2193883741,3267627309,2197839019,2193885845,2193886026,3271637834,2194017109,2197853533,2193884346,3267758683,2197837143,2193884459,2193885845,3271576469,2193884842,2194016981,2197825205,3267626166,2197842542,2194016855,2193884455,3271448230,2194017683,2193884586,2197830506,3267758445,2197861551,2193884334,2193885773,3271650573,2193886501,2193886546,2197839316,3267758954,2194016621,2197824859,2193884315,3271588439,2193885771,2193885989,2197904165,3267626708,2194016986,2197895350]};return function(){function t(){this.solarCalendar={year:0,month:0,day:0},this.lunarCalendar={year:0,month:0,day:0,intercalation:!1},this.gapjaYearInx=[0,0,0],this.gapjaMonthInx=[0,0,1],this.gapjaDayInx=[0,0,2]}return t.prototype.getLunarData=function(t){return a.KOREAN_LUNAR_DATA[t-a.KOREAN_LUNAR_BASE_YEAR]},t.prototype.getLunarIntercalationMonth=function(a){return a>>12&15},t.prototype.getLunarDays=function(a){return this.getLunarData(a)>>17&511},t.prototype.getLunarDays2=function(t,r,n){var e=this.getLunarData(t);return n&&this.getLunarIntercalationMonth(e)==r?(e>>16&1)>0?a.LUNAR_BIG_MONTH_DAY:a.LUNAR_SMALL_MONTH_DAY:(e>>12-r&1)>0?a.LUNAR_BIG_MONTH_DAY:a.LUNAR_SMALL_MONTH_DAY},t.prototype.getLunarDaysBeforeBaseYear=function(t){for(var r=0,n=a.KOREAN_LUNAR_BASE_YEAR;n<t+1;n++)r+=this.getLunarDays(n);return r},t.prototype.getLunarDaysBeforeBaseMonth=function(t,r,n){var e=0;if(t>=a.KOREAN_LUNAR_BASE_YEAR&&r>0){for(var o=1;o<r+1;o++)e+=this.getLunarDays2(t,o,!1);if(n){var A=this.getLunarIntercalationMonth(this.getLunarData(t));A>0&&A<r+1&&(e+=this.getLunarDays2(t,A,!0))}}return e},t.prototype.getLunarAbsDays=function(a,t,r,n){var e=0;return e=this.getLunarDaysBeforeBaseYear(a-1)+this.getLunarDaysBeforeBaseMonth(a,t-1,!0)+r,n&&this.getLunarIntercalationMonth(this.getLunarData(a))==t&&(e+=this.getLunarDays2(a,t,!1)),e},t.prototype.isSolarIntercalationYear=function(a){return(a>>30&1)>0},t.prototype.getSolarDays=function(t){var r=this.getLunarData(t);return this.isSolarIntercalationYear(r)?a.SOLAR_BIG_YEAR_DAY:a.SOLAR_SMALL_YEAR_DAY},t.prototype.getSolarDays2=function(t,r){var n=this.getLunarData(t);return 2==r&&this.isSolarIntercalationYear(n)?a.SOLAR_DAYS[12]:a.SOLAR_DAYS[r-1]},t.prototype.getSolarDayBeforeBaseYear=function(t){for(var r=0,n=a.KOREAN_LUNAR_BASE_YEAR;n<t+1;n++)r+=this.getSolarDays(n);return r},t.prototype.getSolarDaysBeforeBaseMonth=function(a,t){for(var r=0,n=1;n<t+1;n++)r+=this.getSolarDays2(a,n);return r},t.prototype.getSolarAbsDays=function(t,r,n){var e=0;return e=this.getSolarDayBeforeBaseYear(t-1)+this.getSolarDaysBeforeBaseMonth(t,r-1)+n,e-=a.SOLAR_LUNAR_DAY_DIFF},t.prototype.setSolarDateByLunarDate=function(a,t,r,n){var e,o=this.getLunarAbsDays(a,t,r,n),A=0,i=0;e=o<this.getSolarAbsDays(a+1,1,1)?a:a+1;for(var s=12;s>0;s--){var h=this.getSolarAbsDays(e,s,1);if(o>=h){A=s,i=o-h+1;break}}this.solarCalendar={year:e,month:A,day:i}},t.prototype.setLunarDateBySolarDate=function(a,t,r){var n,e=this.getSolarAbsDays(a,t,r),o=0,A=0,i=!1;n=e>=this.getLunarAbsDays(a,1,1,!1)?a:a-1;for(var s=12;s>0;s--){if(e>=this.getLunarAbsDays(n,s,1,!1)){o=s,this.getLunarIntercalationMonth(this.getLunarData(n))==s&&(i=e>=this.getLunarAbsDays(n,s,1,!0)),A=e-this.getLunarAbsDays(n,o,1,i)+1;break}}this.lunarCalendar={year:n,month:o,day:A,intercalation:i}},t.prototype.checkValidDate=function(t,r,n,e,o){var A=!1,i=1e4*n+100*e+o;if((t?a.KOREAN_LUNAR_MIN_VALUE:a.KOREAN_SOLAR_MIN_VALUE)<=i&&(t?a.KOREAN_LUNAR_MAX_VALUE:a.KOREAN_SOLAR_MAX_VALUE)>=i&&e>0&&e<13&&o>0){var s=t?this.getLunarDays2(n,e,r):this.getSolarDays2(n,e);if(!t&&1582==n&&10==e){if(o>4&&o<15)return!1;s+=10}o<=s&&(A=!0)}return A},t.prototype.setLunarDate=function(a,t,r,n){var e=!1;return this.checkValidDate(!0,n,a,t,r)&&(this.lunarCalendar={year:a,month:t,day:r,intercalation:n&&this.getLunarIntercalationMonth(this.getLunarData(a))==t},this.setSolarDateByLunarDate(a,t,r,n),e=!0),e},t.prototype.setSolarDate=function(a,t,r){var n=!1;return this.checkValidDate(!1,!1,a,t,r)&&(this.solarCalendar={year:a,month:t,day:r},this.setLunarDateBySolarDate(a,t,r),n=!0),n},t.prototype.setGapJa=function(){var t=this.getLunarAbsDays(this.lunarCalendar.year,this.lunarCalendar.month,this.lunarCalendar.day,!!this.lunarCalendar.intercalation);if(t>0){this.gapjaYearInx[0]=(this.lunarCalendar.year+6-a.KOREAN_LUNAR_BASE_YEAR)%a.KOREAN_CHEONGAN.length,this.gapjaYearInx[1]=(this.lunarCalendar.year+0-a.KOREAN_LUNAR_BASE_YEAR)%a.KOREAN_GANJI.length;var r=this.lunarCalendar.month;r+=12*(this.lunarCalendar.year-a.KOREAN_LUNAR_BASE_YEAR),this.gapjaMonthInx[0]=(r+3)%a.KOREAN_CHEONGAN.length,this.gapjaMonthInx[1]=(r+1)%a.KOREAN_GANJI.length,this.gapjaDayInx[0]=(t+4)%a.KOREAN_CHEONGAN.length,this.gapjaDayInx[1]=(t+2)%a.KOREAN_GANJI.length}},t.prototype.getGapJaIndex=function(){return this.setGapJa(),{cheongan:{year:this.gapjaYearInx[0],month:this.gapjaMonthInx[0],day:this.gapjaDayInx[0]},ganji:{year:this.gapjaYearInx[1],month:this.gapjaMonthInx[1],day:this.gapjaDayInx[1]}}},t.prototype.getGapja=function(t){var r=this.getGapJaIndex(),n=t?a.CHINESE_CHEONGAN:a.KOREAN_CHEONGAN,e=t?a.CHINESE_GANJI:a.KOREAN_GANJI,o=t?a.CHINESE_GAPJA_UNIT:a.KOREAN_GAPJA_UNIT,A=t?"".concat(a.INTERCALATION_STR[1]).concat(a.CHINESE_GAPJA_UNIT[1]):"".concat(a.INTERCALATION_STR[0]).concat(a.KOREAN_GAPJA_UNIT[1]);return{year:"".concat(n[r.cheongan.year]).concat(e[r.ganji.year]).concat(o[this.gapjaYearInx[2]]),month:"".concat(n[r.cheongan.month]).concat(e[r.ganji.month]).concat(o[this.gapjaMonthInx[2]]),day:"".concat(n[r.cheongan.day]).concat(e[r.ganji.day]).concat(o[this.gapjaDayInx[2]]),intercalation:this.lunarCalendar.intercalation?A:""}},t.prototype.getKoreanGapja=function(){return this.getGapja()},t.prototype.getChineseGapja=function(){return this.getGapja(!0)},t.prototype.getLunarCalendar=function(){return this.lunarCalendar},t.prototype.getSolarCalendar=function(){return this.solarCalendar},t}()}();
+</script>
+
+<script>
+/* ══════════════════════════════════════════════
+   음력 ↔ 양력 변환 엔진
+   korean-lunar-calendar 라이브러리 기반 (정확도 보장)
+   범위: 1900 ~ 2050
+   ══════════════════════════════════════════════ */
+
+
+/**
+ * 음력 → 양력 변환 (korean-lunar-calendar 라이브러리 사용)
+ * 역변환 정합성 검증으로 잘못된 날짜(없는 윤달 등)를 정확히 걸러냄
+ */
+function lunarToSolar(ly, lm, ld, isLeap) {
+  try {
+    const cal = new KoreanLunarCalendar();
+    cal.setLunarDate(ly, lm, ld, isLeap ? 1 : 0);
+    const sol = cal.getSolarCalendar();
+    if (!sol || !sol.year) return null;
+
+    // 역변환으로 정합성 검증: 잘못된 날짜·없는 윤달 걸러내기
+    const cal2 = new KoreanLunarCalendar();
+    cal2.setSolarDate(sol.year, sol.month, sol.day);
+    const lunar = cal2.getLunarCalendar();
+    if (!lunar) return null;
+    if (lunar.year !== ly || lunar.month !== lm || lunar.day !== ld) return null;
+    if (!!lunar.intercalation !== !!isLeap) return null;
+
+    return { year: sol.year, month: sol.month, day: sol.day };
+  } catch(e) {
+    return null;
+  }
+}
+
+/** 해당 음력 연도·월의 마지막 일 반환 */
+function lunarLastDay(ly, lm, isLeap) {
+  try {
+    // 30일이 역변환까지 통과하면 30일 달, 아니면 29일 달
+    if (lunarToSolar(ly, lm, 30, isLeap)) return 30;
+  } catch(e) {}
+  return 29;
+}
+
+/** 해당 음력 연도에 특정 월의 윤달이 있는지 */
+function hasLeapMonth(ly, lm) {
+  return !!lunarToSolar(ly, lm, 1, true);
+}
+</script>
+<script>
+/* ── UI 유틸 ── */
+let selectedGender = '남';
+let calType = 'solar'; // 'solar' | 'lunar'
+
+function selectGender(el) {
+  document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  selectedGender = el.dataset.gender;
+}
+
+/* ── 양력/음력 토글 ── */
+function setCalType(type) {
+  calType = type;
+  document.getElementById('btn-solar').classList.toggle('active', type === 'solar');
+  document.getElementById('btn-lunar').classList.toggle('active', type === 'lunar');
+  const lunarExtra = document.getElementById('lunar-extra');
+  lunarExtra.classList.toggle('show', type === 'lunar');
+  if (type === 'solar') {
+    document.getElementById('lunar-converted').classList.remove('show');
+  }
+  // 일 목록 재계산
+  updateDayList();
+}
+
+/* ── 일 목록 갱신 (양력/음력 공통) ── */
+function updateDayList() {
+  const year  = +document.getElementById('inp-year').value || 0;
+  const month = +document.getElementById('inp-month').value;
+  const dayEl = document.getElementById('inp-day');
+  const prev  = +dayEl.value;
+  let max = 31;
+
+  if (month) {
+    if (calType === 'solar') {
+      max = year ? new Date(year, month, 0).getDate() : 31;
+    } else {
+      // 음력: lunarLastDay 사용
+      const isLeap = document.getElementById('inp-leap')?.checked || false;
+      if (year >= 1900 && year <= 2025) {
+        max = lunarLastDay(year, month, isLeap);
+      } else {
+        max = 30;
+      }
+    }
+  }
+
+  dayEl.innerHTML = '<option value="">일 선택</option>';
+  for (let d = 1; d <= max; d++) {
+    dayEl.innerHTML += `<option value="${d}"${d===prev?' selected':''}>${d}일</option>`;
+  }
+
+  // 음력이면 변환 결과 실시간 표시
+  if (calType === 'lunar') showLunarConverted();
+}
+
+/* ── 음력 변환 결과 실시간 표시 ── */
+function showLunarConverted() {
+  const year  = +document.getElementById('inp-year').value;
+  const month = +document.getElementById('inp-month').value;
+  const day   = +document.getElementById('inp-day').value;
+  const isLeap = document.getElementById('inp-leap')?.checked || false;
+  const box = document.getElementById('lunar-converted');
+
+  if (!year || !month || !day) { box.classList.remove('show'); return; }
+  if (year < 1900 || year > 2025) { box.classList.remove('show'); return; }
+
+  const sol = lunarToSolar(year, month, day, isLeap);
+  if (!sol) { box.classList.remove('show'); return; }
+
+  const leapLabel = isLeap ? ' (윤달)' : '';
+  box.innerHTML = `🔄 음력 ${year}년 ${month}월 ${day}일${leapLabel} → <strong>양력 ${sol.year}년 ${sol.month}월 ${sol.day}일</strong>`;
+  box.classList.add('show');
+}
+
+// 월 선택 시 일 목록 갱신
+document.getElementById('inp-month').addEventListener('change', updateDayList);
+document.getElementById('inp-year').addEventListener('change', updateDayList);
+
+// 윤달 체크 변경 시
+document.getElementById('inp-leap').addEventListener('change', updateDayList);
+
+// 일 선택 변경 시 변환 결과 갱신
+document.getElementById('inp-day').addEventListener('change', function() {
+  if (calType === 'lunar') showLunarConverted();
+});
+
+// 초기 일 목록
+(function() {
+  const dayEl = document.getElementById('inp-day');
+  dayEl.innerHTML = '<option value="">일 선택</option>';
+  for (let d = 1; d <= 31; d++) dayEl.innerHTML += `<option value="${d}">${d}일</option>`;
+})();
+
+/* ── 분석 실행 ── */
+function runAnalysis() {
+  let year  = +document.getElementById('inp-year').value;
+  let month = +document.getElementById('inp-month').value;
+  let day   = +document.getElementById('inp-day').value;
+  const hourEl = document.getElementById('inp-hour').value;
+  const hour  = hourEl !== '' ? +hourEl : null;
+
+  if (!year || !month || !day) {
+    alert('연도, 월, 일을 모두 입력해주세요.');
+    return;
+  }
+  if (year < 1900 || year > 2025) {
+    alert('1900 ~ 2025년 사이의 연도를 입력해주세요.');
+    return;
+  }
+
+  // 음력이면 양력으로 변환
+  let isLunar = false;
+  let lunarStr = '';
+  if (calType === 'lunar') {
+    const isLeap = document.getElementById('inp-leap')?.checked || false;
+    const sol = lunarToSolar(year, month, day, isLeap);
+    if (!sol) {
+      alert('음력 날짜 변환에 실패했습니다. 날짜를 확인해주세요.');
+      return;
+    }
+    lunarStr = `음력 ${year}년 ${month}월 ${day}일${isLeap?' (윤달)':''} → 양력 ${sol.year}년 ${sol.month}월 ${sol.day}일`;
+    year = sol.year; month = sol.month; day = sol.day;
+    isLunar = true;
+  }
+
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('result').style.display  = 'none';
+
+  setTimeout(() => {
+    const effectiveHour = hour !== null ? hour : 12; // 시간 미입력 시 오시(12) 기본
+    try {
+      const data = SajuEngine.analyze(year, month, day, effectiveHour);
+      renderResult(data, year, month, day, hour, selectedGender, isLunar ? lunarStr : null);
+    } catch(e) {
+      document.getElementById('loading').style.display = 'none';
+      alert('분석 중 오류가 발생했습니다: ' + e.message);
+    }
+  }, 600);
+}
+
+/* ── 결과 렌더링 ── */
+function renderResult(data, year, month, day, hour, gender, lunarInfo) {
+  const { yeonju, wolju, ilju, siju, sipseong, dist, balance, geokguk, reading } = data;
+
+  const OHENG_COLOR = { 목:'#4a7c59', 화:'#c0392b', 토:'#c8973a', 금:'#d0d0d0', 수:'#2c3e50' };
+  const OHENG_CHAR  = SajuEngine.OHENG_CHAR;
+  const SIPSEONG_I  = SajuEngine.SIPSEONG;
+
+  // 각 주(柱)별 천간·지지 십성 구하기 (새 엔진: sipseong.detail 활용)
+  function getStemStar(pillarKey) {
+    // detail 에서 해당 위치 찾기
+    for (const [star, entries] of Object.entries(sipseong.detail)) {
+      if (entries.some(e => e.pos === pillarKey + ' 천간')) return star;
+    }
+    return '';
+  }
+  function getBranchStar(posLabel) {
+    for (const [star, entries] of Object.entries(sipseong.detail)) {
+      if (entries.some(e => e.pos === posLabel)) return star;
+    }
+    return '';
+  }
+
+  // 천간·지지 한자: 엔진이 ganHJ / jiHJ 로 직접 제공 → 별도 매핑 불필요
+
+  // 오행 배경색·글씨색 — 목:녹색, 화:빨강, 토:황토, 금:흰색, 수:검정
+  // 배경: 오행 고유 색의 연한(10~15%) 톤, 글씨: 오행 고유 진한 색
+  const OHENG_BG   = { '목':'rgba(60,140,80,0.13)',  '화':'rgba(192,57,43,0.12)',  '토':'rgba(184,134,11,0.13)', '금':'rgba(230,230,230,0.55)', '수':'rgba(28,28,46,0.88)' };
+  const OHENG_TEXT = { '목':'#2e7d32',               '화':'#c0392b',               '토':'#8a6200',              '금':'#4a4a4a',                '수':'#f0f0f0' };
+  const OHENG_BORDER = { '목':'1.5px solid #2e7d32', '화':'1.5px solid #c0392b',  '토':'1.5px solid #b8860b',  '금':'1.5px solid #999999',    '수':'1.5px solid #3a3a5a' };
+
+  // 엔진이 반환하는 오행 키를 정규화 (한자/혼합 표기 대비)
+  const OH_NORM = {
+    '목':'목', '木':'목', '나무':'목',
+    '화':'화', '火':'화', '불':'화',
+    '토':'토', '土':'토', '흙':'토',
+    '금':'금', '金':'금', '쇠':'금', '금속':'금',
+    '수':'수', '水':'수', '물':'수'
+  };
+  function ohKey(raw) { return OH_NORM[raw] || raw; }
+
+  // 오행별 인라인 스타일 반환
+  function charStyle(rawOh) {
+    const k  = ohKey(rawOh);
+    if (!OHENG_BG[k]) {
+      console.warn('[사주] 알 수 없는 오행값:', rawOh, '→ ohKey:', k);
+    }
+    const bg = OHENG_BG[k]     || '#cccccc';
+    const tx = OHENG_TEXT[k]   || '#000000';
+    const bd = OHENG_BORDER[k] || 'none';
+    return 'background:' + bg + ';color:' + tx + ';border:' + bd + ';border-radius:8px;padding:4px 10px;display:inline-block;min-width:44px;text-align:center';
+  }
+
+  const pillarDefs = [
+    { label:'시주 (時柱)', sublabel:'자녀·미래',   data: siju,   stemStar: getStemStar('시주'),   branchStar: getBranchStar('시주 지지') },
+    { label:'일주 (日柱)', sublabel:'본인·배우자', data: ilju,   stemStar: '일간(나)',             branchStar: getBranchStar('일지') },
+    { label:'월주 (月柱)', sublabel:'부모·환경',   data: wolju,  stemStar: getStemStar('월주'),   branchStar: getBranchStar('월지(핵심)') },
+    { label:'년주 (年柱)', sublabel:'조상·뿌리',   data: yeonju, stemStar: getStemStar('년주'),   branchStar: getBranchStar('년주 지지') },
+  ].filter(p => p.data); // 시주 없을 경우 제외
+
+  // ── 사주원국 테이블 HTML ──
+  let tableHeaders = pillarDefs.map(p => `<th>${p.label}<br><small style="font-weight:300;color:var(--muted)">${p.sublabel}</small></th>`).join('');
+  let ganRow = pillarDefs.map((p, i) => {
+    const oh = SajuEngine.CHEONGAN_OHENG[p.data.gan];
+    const isIlgan = p.stemStar === '일간(나)';
+    const ssLabel = p.stemStar || '';
+    const ganHanja = p.data.ganHJ || p.data.gan;
+    const ganStyle = isIlgan
+      ? charStyle(oh) + ';outline:2.5px solid #c8973a;outline-offset:2px'
+      : charStyle(oh);
+    return `
+      <td>
+        <div class="pillar-cell">
+          <span class="sipseong-badge">${ssLabel}</span>
+          <span class="char ${isIlgan ? 'ilgan-char' : ''}"
+                style="${ganStyle}"
+                title="${p.data.gan}">${ganHanja}</span>
+          <div class="oheng-label" style="margin-top:8px">
+            <span class="oheng-dot" style="background:${OHENG_COLOR[ohKey(oh)]}"></span>${oh}(${['목','화','토','금','수'].includes(ohKey(oh)) ? OHENG_CHAR[ohKey(oh)].emoji : ''})
+          </div>
+        </div>
+      </td>`;
+  }).join('');
+
+  let jiRow = pillarDefs.map(p => {
+    const oh = SajuEngine.JIJI_OHENG[p.data.ji];
+    const ssLabel = p.branchStar || '';
+    const jiHanja = p.data.jiHJ || p.data.ji;
+    return `
+      <td>
+        <div class="pillar-cell">
+          <span class="sipseong-badge">${ssLabel}</span>
+          <span class="char"
+                style="${charStyle(oh)}"
+                title="${p.data.ji}">${jiHanja}</span>
+          <div class="oheng-label" style="margin-top:8px">
+            <span class="oheng-dot" style="background:${OHENG_COLOR[ohKey(oh)]}"></span>${oh}
+          </div>
+        </div>
+      </td>`;
+  }).join('');
+
+  // ── 오행 바 차트 ──
+  const maxDist = Math.max(...Object.values(dist), 1);
+  const ohengBars = Object.entries(dist).map(([oh, cnt]) => {
+    const h = Math.round((cnt / (maxDist + 1)) * 60 + (cnt > 0 ? 8 : 4));
+    return `
+      <div class="oheng-bar-wrap">
+        <div class="oheng-count">${cnt}</div>
+        <div class="oheng-bar" style="height:${h}px;background:${OHENG_COLOR[oh]}"></div>
+        <div class="oheng-bar-label">${OHENG_CHAR[oh].label}</div>
+      </div>`;
+  }).join('');
+
+  // ── 분석 카드 HTML ──
+  const readingCards = reading.map((r, i) => `
+    <div class="analysis-card${i === 0 || i === 1 ? ' wide' : ''}" style="animation-delay:${i*0.1}s">
+      <div class="card-title">${r.title}</div>
+      <div class="card-body">${r.content}</div>
+    </div>`).join('');
+
+  // ── 십성 분포 요약 (새 엔진: sipseong.count 사용) ──
+  const ssTags = Object.entries(sipseong.count)
+    .filter(([, cnt]) => cnt > 0)
+    .map(([ss, cnt]) => {
+      const info = SIPSEONG_I[ss] || {};
+      const cat  = info.category || '';
+      return `<span class="sipseong-tag ${cat}" title="${info.detail || ''}">${ss} ×${cnt}</span>`;
+    }).join('');
+
+  const geokInfo = SajuEngine.GEOKGUK[geokguk] || {};
+
+  // ── 최종 HTML ──
+  const birthStr = (lunarInfo ? `<span style="font-size:12px;color:var(--sage);display:block;margin-top:4px">${lunarInfo}</span>` : '') + `${year}년 ${month}월 ${day}일${hour !== null ? ' ' + ['자','축','인','묘','진','사','오','미','신','유','술','해'][Math.floor((hour+1)/2)%12]+'시' : ''} (${gender}성)`;
+
+  const html = `
+    <div class="result-header">
+      <h2>✦ 사주풀이 결과</h2>
+      <p>${birthStr}</p>
+    </div>
+
+    <!-- 사주원국 -->
+    <div class="saju-table-wrap">
+      <div class="saju-table-title">⊞ 사주원국 (四柱八字) <span style="font-size:12px;font-weight:400;color:var(--muted)">— 일주의 천간이 '나(일간)'입니다</span></div>
+      <table class="saju-table">
+        <thead><tr><th></th>${tableHeaders}</tr></thead>
+        <tbody>
+          <tr><th style="font-size:11px;color:var(--muted);writing-mode:horizontal-tb">천간</th>${ganRow}</tr>
+          <tr><th style="font-size:11px;color:var(--muted);writing-mode:horizontal-tb">지지</th>${jiRow}</tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px">
+        <div class="saju-table-title" style="margin-bottom:14px">📊 오행 분포</div>
+        <div class="oheng-bars">${ohengBars}</div>
+      </div>
+    </div>
+
+    <!-- 격국 배너 -->
+    <div style="background:linear-gradient(135deg,rgba(200,151,58,.12),rgba(139,58,42,.08));border:1px solid rgba(200,151,58,.3);border-radius:16px;padding:20px 28px;margin-bottom:24px;display:flex;align-items:center;gap:16px">
+      <div style="font-size:32px">⛩️</div>
+      <div>
+        <div style="font-family:'Noto Serif KR',serif;font-size:17px;font-weight:700;color:var(--ink)">${geokguk}</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:3px">${geokInfo.desc || ''}</div>
+      </div>
+    </div>
+
+    <!-- 십성 분포 -->
+    <div class="analysis-card" style="margin-bottom:20px">
+      <div class="card-title">🔮 십성(十星) 분포</div>
+      <div class="sipseong-tags">${ssTags || '<span style="color:var(--muted);font-size:13px">분석된 십성이 없습니다</span>'}</div>
+    </div>
+
+    <!-- 상세 분석 카드들 -->
+    <div class="analysis-grid">${readingCards}</div>
+
+    <!-- 유료 CTA -->
+    <div class="cta-box">
+      <h3>🌙 더 깊은 사주 분석을 원하신다면</h3>
+      <p>약식 분석만으로는 알 수 없는 대운·세운의 흐름,<br>
+      연애·결혼운, 재물운, 건강운, 직업운을 상세히 확인하세요.</p>
+      <div class="cta-features">
+        <div class="cta-feature">✦ 대운(10년) 상세 분석</div>
+        <div class="cta-feature">✦ 2025·2026 세운 풀이</div>
+        <div class="cta-feature">✦ 연애·결혼 궁합</div>
+        <div class="cta-feature">✦ 직업·재물 심층 분석</div>
+        <div class="cta-feature">✦ 1:1 명리 상담</div>
+      </div>
+      <button class="cta-btn" onclick="alert('유료 서비스 페이지로 연결됩니다.')">유료 풀이 신청하기 →</button>
+    </div>
+
+    <div class="disclaimer">
+      본 사주풀이는 명리학의 이론을 바탕으로 한 참고 자료이며,<br>
+      실제 운명이나 미래를 확정짓는 것이 아닙니다. 재미로 활용하시고, 중요한 결정은 전문가와 상담하세요.
+    </div>
+  `;
+
+  const resultEl = document.getElementById('result');
+  resultEl.innerHTML = html;
+  document.getElementById('loading').style.display = 'none';
+  resultEl.style.display = 'block';
+  resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // ── 오행 배경색 디버그 (개발용) ──
+  if (window.__sajuDebug) {
+    const spans = resultEl.querySelectorAll('.pillar-cell .char');
+    spans.forEach(s => {
+      console.log('char:', s.textContent, '| bg:', s.style.background, '| computed bg:', getComputedStyle(s).backgroundColor);
+    });
+  }
+}
+</script>
+</body>
+</html>
