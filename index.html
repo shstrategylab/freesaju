@@ -731,10 +731,29 @@ function renderResult(data, year, month, day, hour, gender) {
   // 지지 한자 매핑
   const JI_HANJA  = { '자':'子','축':'丑','인':'寅','묘':'卯','진':'辰','사':'巳','오':'午','미':'未','신':'申','유':'酉','술':'戌','해':'亥' };
 
-  // 오행 배경색 (글자 배경)
-  const OHENG_BG = { 목:'#4a7c59', 화:'#c0392b', 토:'#b8840a', 금:'#e8e8e8', 수:'#1a1a2e' };
-  // 오행 글자색 (배경에 따른 텍스트 대비)
-  const OHENG_TEXT = { 목:'#ffffff', 화:'#ffffff', 토:'#ffffff', 금:'#222222', 수:'#ffffff' };
+  // 오행 배경색 — 목:녹색, 화:빨강, 토:황토, 금:흰색계, 수:검정
+  const OHENG_BG   = { '목':'#3a7d44', '화':'#c0392b', '토':'#b8860b', '금':'#f0f0f0', '수':'#1c1c2e' };
+  const OHENG_TEXT = { '목':'#ffffff', '화':'#ffffff', '토':'#ffffff', '금':'#222222', '수':'#ffffff' };
+  const OHENG_BORDER = { '목':'none', '화':'none', '토':'none', '금':'1.5px solid #999', '수':'none' };
+
+  // 엔진이 반환하는 오행 키를 정규화 (한자/혼합 표기 대비)
+  const OH_NORM = {
+    '목':'목', '木':'목', '나무':'목',
+    '화':'화', '火':'화', '불':'화',
+    '토':'토', '土':'토', '흙':'토',
+    '금':'금', '金':'금', '쇠':'금', '금속':'금',
+    '수':'수', '水':'수', '물':'수'
+  };
+  function ohKey(raw) { return OH_NORM[raw] || raw; }
+
+  // 오행별 인라인 스타일 반환
+  function charStyle(rawOh) {
+    const k  = ohKey(rawOh);
+    const bg = OHENG_BG[k]     || '#cccccc';
+    const tx = OHENG_TEXT[k]   || '#000000';
+    const bd = OHENG_BORDER[k] || 'none';
+    return 'background:' + bg + ';color:' + tx + ';border:' + bd + ';border-radius:8px;padding:4px 10px;display:inline-block;min-width:44px;text-align:center';
+  }
 
   const pillarDefs = [
     { label:'시주 (時柱)', sublabel:'자녀·미래',   data: siju,   stemStar: getStemStar('시주'),   branchStar: getBranchStar('시주 지지') },
@@ -750,17 +769,18 @@ function renderResult(data, year, month, day, hour, gender) {
     const isIlgan = p.stemStar === '일간(나)';
     const ssLabel = p.stemStar || '';
     const ganHanja = GAN_HANJA[p.data.gan] || p.data.gan;
-    const bgColor  = isIlgan ? '#c8973a' : OHENG_BG[oh];
-    const txColor  = isIlgan ? '#ffffff' : OHENG_TEXT[oh];
+    const ganStyle = isIlgan
+      ? 'background:#c8973a;color:#ffffff;border:none;border-radius:8px;padding:4px 10px;display:inline-block;min-width:44px;text-align:center'
+      : charStyle(oh);
     return `
       <td>
         <div class="pillar-cell">
           <span class="sipseong-badge">${ssLabel}</span>
           <span class="char ${isIlgan ? 'ilgan-char' : ''}"
-                style="background:${bgColor};color:${txColor};border-radius:8px;padding:4px 10px;display:inline-block"
+                style="${ganStyle}"
                 title="${p.data.gan}">${ganHanja}</span>
           <div class="oheng-label" style="margin-top:8px">
-            <span class="oheng-dot" style="background:${OHENG_COLOR[oh]}"></span>${oh}(${['목','화','토','금','수'].includes(oh) ? OHENG_CHAR[oh].emoji : ''})
+            <span class="oheng-dot" style="background:${OHENG_COLOR[ohKey(oh)]}"></span>${oh}(${['목','화','토','금','수'].includes(ohKey(oh)) ? OHENG_CHAR[ohKey(oh)].emoji : ''})
           </div>
         </div>
       </td>`;
@@ -775,10 +795,10 @@ function renderResult(data, year, month, day, hour, gender) {
         <div class="pillar-cell">
           <span class="sipseong-badge">${ssLabel}</span>
           <span class="char"
-                style="background:${OHENG_BG[oh]};color:${OHENG_TEXT[oh]};border-radius:8px;padding:4px 10px;display:inline-block"
+                style="${charStyle(oh)}"
                 title="${p.data.ji}">${jiHanja}</span>
           <div class="oheng-label" style="margin-top:8px">
-            <span class="oheng-dot" style="background:${OHENG_COLOR[oh]}"></span>${oh}
+            <span class="oheng-dot" style="background:${OHENG_COLOR[ohKey(oh)]}"></span>${oh}
           </div>
         </div>
       </td>`;
