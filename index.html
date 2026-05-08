@@ -852,7 +852,7 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
   // 오행 바 차트
   const maxDist = Math.max(...Object.values(dist), 1);
   const ohengBars = Object.entries(dist).map(([oh, cnt]) => {
-    const h = Math.round((cnt / (maxDist + 1)) * 60 + (cnt > 0 ? 8 : 4));
+    const h = cnt === 0 ? 4 : Math.round((cnt / maxDist) * 60) + 8;
     return `<div class="oheng-bar-wrap">
       <div class="oheng-count">${cnt}</div>
       <div class="oheng-bar" style="height:${h}px;background:${OHENG_COLOR[oh]}"></div>
