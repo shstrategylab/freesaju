@@ -780,7 +780,8 @@ function updateDayList() {
   let max = 31;
   if (month) {
     if (calType === 'solar') {
-      max = year ? new Date(year, month, 0).getDate() : 31;
+      // year가 유효할 때만 실제 월별 일수 계산, 없으면 31 유지
+      max = (year >= 1900 && year <= 2025) ? new Date(year, month, 0).getDate() : 31;
     } else {
       const isLeap = document.getElementById('inp-leap')?.checked || false;
       max = (year >= 1900 && year <= 2025) ? lunarLastDay(year, month, isLeap) : 30;
