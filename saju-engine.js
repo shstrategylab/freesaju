@@ -50,6 +50,132 @@ const SajuEngine = (() => {
   // 지지별 대표 천간 인덱스 (십성 음양 계산용)
   const BRANCH_MAIN_STEM = [9, 5, 0, 1, 4, 2, 3, 5, 6, 7, 4, 8];
 
+  // ─── 지장간(地藏干) 데이터 ──────────────────────────────────────
+  // 출처: 전통 분기 기준 (여기·중기·정기, 각 일수)
+  // type: 'y'=여기, 'm'=중기, 'j'=정기
+  const JIJANGGAN = {
+    자: [ { gan:'임', stemIdx:8, days:10, type:'y' }, { gan:'계', stemIdx:9, days:20, type:'j' } ],
+    축: [ { gan:'계', stemIdx:9, days:9,  type:'y' }, { gan:'신', stemIdx:7, days:3,  type:'m' }, { gan:'기', stemIdx:5, days:18, type:'j' } ],
+    인: [ { gan:'무', stemIdx:4, days:7,  type:'y' }, { gan:'병', stemIdx:2, days:7,  type:'m' }, { gan:'갑', stemIdx:0, days:16, type:'j' } ],
+    묘: [ { gan:'갑', stemIdx:0, days:10, type:'y' }, { gan:'을', stemIdx:1, days:20, type:'j' } ],
+    진: [ { gan:'을', stemIdx:1, days:9,  type:'y' }, { gan:'계', stemIdx:9, days:3,  type:'m' }, { gan:'무', stemIdx:4, days:18, type:'j' } ],
+    사: [ { gan:'무', stemIdx:4, days:7,  type:'y' }, { gan:'경', stemIdx:6, days:7,  type:'m' }, { gan:'병', stemIdx:2, days:16, type:'j' } ],
+    오: [ { gan:'병', stemIdx:2, days:10, type:'y' }, { gan:'기', stemIdx:5, days:10, type:'m' }, { gan:'정', stemIdx:3, days:10, type:'j' } ],
+    미: [ { gan:'정', stemIdx:3, days:9,  type:'y' }, { gan:'을', stemIdx:1, days:3,  type:'m' }, { gan:'기', stemIdx:5, days:18, type:'j' } ],
+    신: [ { gan:'무', stemIdx:4, days:7,  type:'y' }, { gan:'임', stemIdx:8, days:7,  type:'m' }, { gan:'경', stemIdx:6, days:16, type:'j' } ],
+    유: [ { gan:'경', stemIdx:6, days:10, type:'y' }, { gan:'신', stemIdx:7, days:20, type:'j' } ],
+    술: [ { gan:'신', stemIdx:7, days:9,  type:'y' }, { gan:'정', stemIdx:3, days:3,  type:'m' }, { gan:'무', stemIdx:4, days:18, type:'j' } ],
+    해: [ { gan:'무', stemIdx:4, days:7,  type:'y' }, { gan:'갑', stemIdx:0, days:5,  type:'m' }, { gan:'임', stemIdx:8, days:18, type:'j' } ],
+  };
+
+  /**
+   * 지장간 십성 계산 (일간 인덱스 기준)
+   */
+  function getJijangganSipseong(dayStemIdx, jiKey) {
+    const list = JIJANGGAN[jiKey] || [];
+    return list.map(item => ({
+      ...item,
+      ganHJ: CHEONGAN_HJ[item.stemIdx],
+      ss: getStemSipseong(dayStemIdx, item.stemIdx),
+    }));
+  }
+
+  /**
+   * 통근(通根) 확인 — 천간이 지지 지장간에 같은 오행을 가지는지
+   * @param {number} stemIdx  천간 인덱스
+   * @param {Array}  pillars  사주 전체 기둥 배열
+   * @returns {{ rooted: boolean, roots: Array }}
+   */
+  function getTonggeun(stemIdx, pillars) {
+    const targetOh = STEM_OHENG_IDX[stemIdx];
+    const roots = [];
+    pillars.forEach(p => {
+      const jiKey = JIJI[p.branchIdx];
+      const jjg   = JIJANGGAN[jiKey] || [];
+      jjg.forEach(item => {
+        if (STEM_OHENG_IDX[item.stemIdx] === targetOh) {
+          roots.push({ ji: jiKey, jiHJ: JIJI_HJ[p.branchIdx], gan: item.gan, ganHJ: CHEONGAN_HJ[item.stemIdx], type: item.type });
+        }
+      });
+    });
+    return { rooted: roots.length > 0, roots };
+  }
+
+  // ─── 용신(用神) 도출 ────────────────────────────────────────────
+  /**
+   * 신강/신약 + 격국 조합으로 용신·희신·기신을 자동 도출
+   * 오행 인덱스: 0=목 1=화 2=토 3=금 4=수
+   * 원칙: 신강 → 설기(식상)·극제(재관) 용신 / 신약 → 인성·비겁 용신
+   */
+  function getYongsin(shingangLevel, ilganIdx, geokguk, dist) {
+    const oh = OHENG_NAMES; // ['목','화','토','금','수']
+    // 일간 오행 인덱스
+    const myOh = STEM_OHENG_IDX[ilganIdx];
+    // 오행 상생 순서: 목→화→토→금→수→목
+    const gen  = (o) => (o + 1) % 5; // 내가 생하는 것(식상 방향)
+    const ctrl = (o) => (o + 2) % 5; // 내가 극하는 것(재성 방향)
+    const kill = (o) => (o + 3) % 5; // 나를 극하는 것(관성 방향)
+    const make = (o) => (o + 4) % 5; // 나를 생하는 것(인성 방향)
+
+    let yongsin, heesin, gisin, giwoo;
+
+    if (shingangLevel === 'strong') {
+      // 신강: 식상(설기)·재성(극제)·관성(제어) 중 상황에 따라
+      // 격국별 세분화
+      if (geokguk === '건록격' || geokguk === '양인격') {
+        yongsin = [oh[ctrl(myOh)], oh[kill(myOh)]]; // 재·관
+        heesin  = [oh[gen(myOh)]];                  // 식상
+        gisin   = [oh[myOh], oh[make(myOh)]];        // 비겁·인성
+      } else if (geokguk.includes('식신') || geokguk.includes('상관')) {
+        yongsin = [oh[gen(myOh)]];                   // 식상 강화
+        heesin  = [oh[ctrl(myOh)]];                  // 재성
+        gisin   = [oh[myOh], oh[make(myOh)]];
+      } else if (geokguk.includes('편재') || geokguk.includes('정재')) {
+        yongsin = [oh[ctrl(myOh)]];                  // 재성
+        heesin  = [oh[gen(myOh)], oh[kill(myOh)]];  // 식상·관성
+        gisin   = [oh[myOh], oh[make(myOh)]];
+      } else if (geokguk.includes('편관') || geokguk.includes('정관')) {
+        yongsin = [oh[kill(myOh)]];                  // 관성
+        heesin  = [oh[ctrl(myOh)]];                  // 재성
+        gisin   = [oh[myOh], oh[make(myOh)]];
+      } else {
+        // 인성격 신강: 관성·재성으로 설기
+        yongsin = [oh[kill(myOh)], oh[ctrl(myOh)]];
+        heesin  = [oh[gen(myOh)]];
+        gisin   = [oh[myOh], oh[make(myOh)]];
+      }
+      giwoo = oh[make(myOh)]; // 구신: 인성(기운 더해줌)
+    } else if (shingangLevel === 'weak') {
+      // 신약: 인성·비겁이 용신
+      yongsin = [oh[make(myOh)], oh[myOh]];
+      heesin  = [oh[gen(myOh)]];
+      gisin   = [oh[kill(myOh)], oh[ctrl(myOh)]];
+      giwoo   = oh[gen(myOh)];
+    } else {
+      // 중화: 과다 오행을 설기·억제하는 방향
+      const maxOh  = Object.entries(dist).sort((a,b)=>b[1]-a[1])[0][0];
+      const maxIdx = OHENG_NAMES.indexOf(maxOh);
+      yongsin = [oh[(maxIdx + 2) % 5], oh[(maxIdx + 3) % 5]];
+      heesin  = [oh[(maxIdx + 1) % 5]];
+      gisin   = [maxOh];
+      giwoo   = null;
+    }
+
+    // 십성 이름으로 변환
+    function ohToSs(targetOhName) {
+      const tIdx = OHENG_NAMES.indexOf(targetOhName);
+      const rel  = (tIdx - myOh + 5) % 5;
+      const labels = ['비겁(比劫)', '식상(食傷)', '재성(財星)', '관성(官星)', '인성(印星)'];
+      return labels[rel];
+    }
+
+    return {
+      yongsin: yongsin.map(o => ({ oh: o, ss: ohToSs(o) })),
+      heesin:  heesin.map(o  => ({ oh: o, ss: ohToSs(o) })),
+      gisin:   gisin.map(o   => ({ oh: o, ss: ohToSs(o) })),
+    };
+  }
+
   // ─── 만세력 핵심 테이블 ─────────────────────────────────────────
 
   /**
@@ -761,6 +887,142 @@ ${ss.detail}<br><br>
       });
     }
 
+    // ⑦ 성격·행동 심화 — 일지 십성 + 비겁/식상 강도 기반
+    const iljiss = (() => {
+      for (const [star, entries] of Object.entries(sipseong.detail)) {
+        if (entries.some(e => e.pos === '일지')) return star;
+      }
+      return null;
+    })();
+
+    const PERSONALITY_DEEP = {
+      비견: { title:'독립적 자아', body:'남에게 기대지 않으려는 독립심이 강합니다. 내 방식, 내 페이스를 고집하는 편이며 협업보다 단독 작업에서 집중력이 높아집니다. 자존심이 강해 지는 것을 싫어하고, 경쟁 상황에서 자연스럽게 투지가 발동됩니다.' },
+      겁재: { title:'경쟁과 추진의 이중성', body:'한번 목표를 정하면 강하게 밀어붙이는 추진력이 있습니다. 타인과의 경쟁에서 강해지지만, 반대로 재물이나 인간관계에서 갈등이 생기기 쉬운 구조이기도 합니다. 지나친 승부욕을 조절하는 것이 관계의 열쇠입니다.' },
+      식신: { title:'낙천적 재능인', body:'긍정적이고 여유로운 태도로 주변을 편안하게 만드는 힘이 있습니다. 음식·예술·취미 등 감각적인 분야에서 재능이 발현되며, 서두르지 않아도 결과가 따라오는 타입입니다. 삶의 질을 중시하고 즐기면서 일하는 환경이 맞습니다.' },
+      상관: { title:'표현하는 반골 기질', body:'기존 규칙과 권위에 반발하는 기질이 있습니다. 비판적 사고와 창의적 표현이 강점이며, 글·말·예술로 자신을 드러낼 때 가장 생동감 있습니다. 이 에너지를 조직 안에 가두면 갈등이 생기고, 자유로운 환경에서는 폭발적 성과를 냅니다.' },
+      편재: { title:'활동형 기회포착가', body:'가만히 앉아있는 것보다 부지런히 움직이며 기회를 만드는 타입입니다. 사람을 통해 정보와 재물이 들어오는 구조라 인맥 관리가 중요합니다. 큰 판을 벌이는 것을 즐기지만 마무리와 관리를 소홀히 하면 기회가 새어나갈 수 있습니다.' },
+      정재: { title:'성실한 관리형', body:'계획적이고 꼼꼼하게 자원을 관리하는 타입입니다. 큰 욕심보다 착실하게 쌓아가는 것을 선호하며, 한 번 정해진 루틴을 잘 유지합니다. 변화보다 안정을 중시하는 경향이 있어 리스크가 낮은 선택을 선호합니다.' },
+      편관: { title:'카리스마 책임형', body:'강한 압박에도 굴하지 않는 내면의 강인함이 있습니다. 책임감이 강하고 카리스마가 자연스럽게 풍기며, 역경 속에서 오히려 진면목이 드러나는 타입입니다. 다만 지나치게 혼자 짊어지는 경향이 번아웃을 부를 수 있습니다.' },
+      정관: { title:'원칙주의 조직형', body:'규칙과 질서를 중시하고 도덕적 기준이 높습니다. 조직 안에서 자신의 역할을 충실히 이행하며 신뢰와 평판을 쌓아갑니다. 원칙을 지키는 데서 자존감을 찾지만, 지나치면 융통성이 부족하다는 인상을 줄 수 있습니다.' },
+      편인: { title:'독창적 전문가 기질', body:'특정 분야에 깊이 빠져드는 몰입력이 강합니다. 남들이 가지 않는 길, 비주류적 사고를 즐기며 자신만의 독특한 세계관을 구축합니다. 다만 관심이 사라지면 빠르게 식는 기질이 있어 지속적인 동기 유지가 과제입니다.' },
+      정인: { title:'배움을 사랑하는 수용형', body:'지식과 배움에서 안정감을 찾는 타입입니다. 따뜻한 포용력으로 주변을 감싸며, 어머니처럼 돌보는 성향이 있습니다. 학업·공부·자격 취득이 삶의 중요한 이정표가 되는 경우가 많으며, 지식이 곧 자산이 됩니다.' },
+    };
+
+    if (iljiss && PERSONALITY_DEEP[iljiss]) {
+      const pd = PERSONALITY_DEEP[iljiss];
+      lines.push({
+        tag: 'personality',
+        title: `🧠 성격 심화 — 일지 ${SIPSEONG[iljiss]?.name || iljiss}`,
+        content: `<strong>${pd.title}</strong><br><br>${pd.body}`,
+      });
+    }
+
+    // ⑧ 사회·직업 심화 — 격국 + 신강약 조합
+    const JOB_DEEP = {
+      식신격: {
+        strong: '풍부한 에너지가 재능 발휘를 뒷받침합니다. 식신생재(食神生財) 구조가 완성되면 자신의 특기·취미가 수입원이 됩니다. 콘텐츠 창작, 기술 기반 프리랜서, 요식·서비스업에서 두각을 나타냅니다.',
+        weak:   '재능은 충분하지만 지속적인 에너지 공급(인성·비겁의 지원)이 필요합니다. 안정적인 베이스가 확보된 후 재능을 꽃피우는 순서가 유리합니다.',
+        balanced: '재능과 안정이 균형을 이루는 사주입니다. 무리하지 않아도 꾸준히 결실을 맺으며 직업 만족도가 높은 편입니다.',
+      },
+      상관격: {
+        strong: '상관생재(傷官生財) 구조가 강력합니다. 창의·언변·표현 능력이 직접적인 수입으로 연결될 때 가장 빛납니다. 다만 상관극관(傷官剋官)으로 권위자·조직과 마찰이 잦을 수 있으니, 독립적 환경이나 창업을 고려하세요.',
+        weak:   '표현력은 탁월하나 에너지 소모가 빨라 장기 지속이 관건입니다. 역량을 집중할 한 분야를 정하고, 체력과 멘탈 관리를 병행해야 오래 빛납니다.',
+        balanced: '창의력과 실행력이 균형을 이루어 프리랜서·기획직·예술 분야에서 안정적으로 성과를 냅니다.',
+      },
+      정재격: {
+        strong: '강한 에너지가 성실함을 뒷받침합니다. 꾸준히 쌓아가면 중·장년 이후 탄탄한 자산 기반이 만들어집니다. 부동산·금융·제조·회계 분야와 궁합이 좋습니다.',
+        weak:   '안정 지향적이지만 에너지가 부족할 수 있습니다. 무리한 확장보다 꾸준한 적립과 관리가 재물 전략의 핵심입니다.',
+        balanced: '성실하고 계획적인 재물 관리로 안정적인 자산을 쌓아갑니다. 리스크를 낮추고 장기 투자 관점이 유리합니다.',
+      },
+      편재격: {
+        strong: '넘치는 활동력이 큰 판을 벌이는 데 유리합니다. 무역·사업·투자에서 스케일 있는 결과를 낼 수 있습니다. 단, 분산 투자보다 선택과 집중이 중요합니다.',
+        weak:   '기회 포착 능력은 있지만 자금·체력 관리가 함께 되어야 기회가 결실로 이어집니다. 파트너십을 활용하는 전략이 유리합니다.',
+        balanced: '사업가 기질과 안정 감각이 공존하여 중간 규모의 사업이나 영업직에서 꾸준한 성과를 냅니다.',
+      },
+      정관격: {
+        strong: '강한 자아와 원칙이 결합하여 조직에서 리더십을 발휘합니다. 공직·법조·교육·대기업 관리직에서 두각을 나타내며, 신뢰 자산이 커리어의 핵심입니다.',
+        weak:   '조직의 지원과 인정 속에서 역량이 최대화됩니다. 혼자 모든 것을 해결하기보다 조직·팀 안에서 역할을 명확히 하는 것이 유리합니다.',
+        balanced: '원칙과 협력의 균형이 뛰어나 조직·공직에서 꾸준히 인정받는 타입입니다.',
+      },
+      편관격: {
+        strong: '강한 에너지와 카리스마가 권력·책임 있는 자리와 잘 맞습니다. 군·경·의료·법조·스포츠에서 탁월한 성과를 내지만, 번아웃 방지를 위한 회복 루틴이 필수입니다.',
+        weak:   '시련이 성장의 자양분입니다. 약한 체력·에너지를 보완하는 인성(지식·자격증)이 있을 때 시련을 도약의 발판으로 삼을 수 있습니다.',
+        balanced: '책임감과 실행력의 균형으로 전문직·관리직·복지 분야에서 안정적인 역량을 발휘합니다.',
+      },
+      정인격: {
+        strong: '지식과 자격을 무기로 독립적인 커리어를 구축합니다. 공부할수록 몸값이 높아지는 구조로, 전문직·교수·연구·출판에서 장기적으로 빛납니다.',
+        weak:   '배움이 가장 강력한 무기입니다. 인성의 지원이 신약을 보완하므로, 지속적인 학습과 자격 취득이 삶의 핵심 전략입니다.',
+        balanced: '학문적 성장과 실용적 적용의 균형이 뛰어나 교육·상담·연구 분야에서 꾸준한 성과를 냅니다.',
+      },
+      편인격: {
+        strong: '강한 독창성과 에너지가 결합하여 독보적인 전문가 영역을 구축합니다. 명리·심리·예술·연구 등 비주류 전문 분야에서 권위자가 될 수 있습니다.',
+        weak:   '몰입력은 강하지만 에너지 지속력이 관건입니다. 흥미가 유지되는 한 분야를 깊이 파는 전략이 커리어의 핵심입니다.',
+        balanced: '독창성과 꾸준함이 균형을 이루어 기술·예술·연구 분야에서 안정적으로 성과를 냅니다.',
+      },
+      건록격: {
+        strong: '자립심과 에너지가 충만하여 사업가·창업가로서 최적의 조건입니다. 초반 시행착오 후 탄탄한 자기 영역을 구축합니다.',
+        weak:   '독립 의지는 강하나 지원과 자본이 필요한 시기에는 협력 파트너를 적극 활용해야 합니다.',
+        balanced: '자립심과 협력 감각의 균형으로 창업·프리랜서·소규모 사업에서 안정적인 성과를 냅니다.',
+      },
+      양인격: {
+        strong: '전투적인 집중력과 승부욕이 경쟁 분야에서 압도적입니다. 스포츠·전문직·창업 등 경쟁 환경에서 두각을 나타내지만, 감정 관리와 체력 안배가 장기 성공의 열쇠입니다.',
+        weak:   '승부욕은 강하나 지속력이 관건입니다. 에너지 안배와 회복 루틴이 장기 레이스를 완주하는 필수 조건입니다.',
+        balanced: '집중력과 안정감의 균형으로 전문직·경쟁 환경에서 꾸준한 성과를 냅니다.',
+      },
+    };
+
+    const jobKey = geokguk;
+    const jobLevelKey = shingang.level === 'strong' ? 'strong' : shingang.level === 'weak' ? 'weak' : 'balanced';
+    const jobDeep = JOB_DEEP[jobKey];
+    if (jobDeep) {
+      lines.push({
+        tag: 'job',
+        title: '💼 사회·직업 심화',
+        content: jobDeep[jobLevelKey],
+      });
+    }
+
+    // ⑨ 육친(六親) — 무료: 배우자·부모 티저 / 잠금: 자녀·형제
+    const YUKCHINS = {
+      남: {
+        spouse: { star: '정재', label: '배우자(正財)', desc: '재성이 배우자를 의미합니다.' },
+        parent: { star: '정인', label: '어머니(正印)', desc: '인성이 어머니를 의미합니다.' },
+      },
+      여: {
+        spouse: { star: '정관', label: '배우자(正官)', desc: '관성이 배우자를 의미합니다.' },
+        parent: { star: '정인', label: '어머니(正印)', desc: '인성이 어머니를 의미합니다.' },
+      },
+    };
+
+    // 육친 카드 (성별 무관 공통 생성 — index.html에서 gender 전달 필요)
+    // 배우자궁(일지) 기반 티저
+    const spouseJi = ilju.ji;
+    const spouseJjg = (JIJANGGAN[spouseJi] || []).map(item => ({
+      ...item,
+      ganHJ: CHEONGAN_HJ[item.stemIdx],
+      ss: getStemSipseong(ilju.stemIdx, item.stemIdx),
+    }));
+    const hasSpouseStar = spouseJjg.some(g => g.ss === '정재' || g.ss === '편재' || g.ss === '정관' || g.ss === '편관');
+
+    lines.push({
+      tag: 'yukchins',
+      title: '👨‍👩‍👧 육친(六親) — 배우자궁',
+      content: `일지 <strong>${ilju.jiHJ}(${spouseJi})</strong>가 배우자궁입니다.<br><br>` +
+        `배우자궁 지장간: <strong>${spouseJjg.map(g => `${g.ganHJ}(${g.ss})`).join(' · ')}</strong><br><br>` +
+        (hasSpouseStar
+          ? `배우자궁에 <strong>배우자성(재성·관성)</strong>이 암장되어 있습니다. 겉으로 드러나지 않아도 내면에 인연의 씨앗이 자리하고 있으며, 시간이 쌓일수록 배우자 인연이 선명해집니다.`
+          : `배우자궁에 배우자성이 직접적으로 드러나지 않습니다. 인연은 예상치 못한 시점과 방식으로 찾아오는 경향이 있으며, 대운·세운의 흐름 속에서 만남이 열립니다.`) +
+        `<br><br><span style="color:var(--muted);font-size:12px">🔒 자녀·형제·부모 심화 분석은 프리미엄에서 확인하세요</span>`,
+    });
+
+    // ⑩ 용신·총평
+    lines.push({
+      tag: 'yongsin',
+      title: '🎯 용신(用神) · 총평',
+      content: '', // index.html에서 result.yongsin으로 직접 렌더링 — 아래 플래그로 구분
+      isYongsin: true,
+    });
+
     return lines;
   }
 
@@ -796,6 +1058,26 @@ ${ss.detail}<br><br>
       stemIdx: dayStemIdx,
     };
 
+    // 지장간 계산 (4기둥 각 지지)
+    const jijanggan = {
+      yeon: getJijangganSipseong(dayStemIdx, yeonju.ji),
+      wol:  getJijangganSipseong(dayStemIdx, wolju.ji),
+      il:   getJijangganSipseong(dayStemIdx, ilju.ji),
+      si:   siju ? getJijangganSipseong(dayStemIdx, siju.ji) : [],
+    };
+
+    // 통근 계산 (4기둥 천간)
+    const tonggeun = {
+      yeon: getTonggeun(yeonju.stemIdx, pillars),
+      wol:  getTonggeun(wolju.stemIdx,  pillars),
+      il:   getTonggeun(ilju.stemIdx,   pillars),
+      si:   siju ? getTonggeun(siju.stemIdx, pillars) : null,
+    };
+
+    // 용신 도출
+    const shingang = getShingang(sipseong);
+    const yongsin  = getYongsin(shingang.level, dayStemIdx, geokguk, dist);
+
     const result = {
       yeonju, wolju, ilju, siju,
       pillars,
@@ -805,6 +1087,10 @@ ${ss.detail}<br><br>
       balance,
       geokguk,
       cheoneul,
+      jijanggan,
+      tonggeun,
+      yongsin,
+      shingang,
     };
     result.reading = generateReading(result);
     return result;
@@ -828,6 +1114,9 @@ ${ss.detail}<br><br>
     getShingang,
     getComboDesc,
     getOhengPatterns,
+    getJijangganSipseong,
+    getTonggeun,
+    getYongsin,
     // 정적 데이터
     CHEONGAN, CHEONGAN_HJ,
     JIJI, JIJI_HJ,
@@ -835,7 +1124,7 @@ ${ss.detail}<br><br>
     JIJI_OHENG, JIJI_UMNYANG,
     OHENG_CHAR, SIPSEONG, ILGAN_DESC, GEOKGUK,
     COMBO_DESC, ILJIJI_ROMANCE, OHENG_EXCESS,
-    JIEQI,
+    JIEQI, JIJANGGAN,
   };
 })();
 
