@@ -773,19 +773,15 @@ function setCalType(type) {
 }
 
 function updateDayList() {
-  const year  = +document.getElementById('inp-year').value || 0;
   const month = +document.getElementById('inp-month').value;
   const dayEl = document.getElementById('inp-day');
   const prev  = +dayEl.value;
   let max = 31;
-  if (month) {
-    if (calType === 'solar') {
-      // year가 유효할 때만 실제 월별 일수 계산, 없으면 31 유지
-      max = (year >= 1900 && year <= 2025) ? new Date(year, month, 0).getDate() : 31;
-    } else {
-      const isLeap = document.getElementById('inp-leap')?.checked || false;
-      max = (year >= 1900 && year <= 2025) ? lunarLastDay(year, month, isLeap) : 30;
-    }
+  if (calType === 'lunar') {
+    max = 30; // 음력은 최대 30일
+  } else if (month) {
+    const daysInMonth = [0,31,28,31,30,31,30,31,31,30,31,30,31];
+    max = daysInMonth[month] || 31;
   }
   dayEl.innerHTML = '<option value="">일 선택</option>';
   for (let d = 1; d <= max; d++) {
