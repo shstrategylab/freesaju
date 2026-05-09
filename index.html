@@ -1001,9 +1001,7 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
   const yeonganUmnyang = SajuEngine.CHEONGAN_UMNYANG[yeonju.gan];
   const isForward = (gender === '남' && yeonganUmnyang === '양') || (gender === '여' && yeonganUmnyang === '음');
 
-  // 대운수 계산: 절기까지의 날수 / 3
-  // 순행(양남/음녀): 다음(또는 이번달) 절기까지 남은 날
-  // 역행(음남/양녀): 이전(또는 이번달) 절기까지 지난 날
+  // 대운수 계산: 절기까지의 날수 / 3, 반올림 (전통 만세력 — 날수 기준, 시간 미적용)
   const jq = SajuEngine.JIEQI[year] || SajuEngine.JIEQI.default;
   const cutDay = jq[month - 1]; // 이번달 절기일
 
@@ -1012,7 +1010,7 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
     if (day >= cutDay) {
       // 절기 이후 출생 → 다음달 절기까지 남은 날
       const daysInMonth = new Date(year, month, 0).getDate();
-      const nextCut = jq[month % 12]; // 다음달 절기일 (0-indexed)
+      const nextCut = jq[month % 12]; // 다음달 절기일
       daysToNode = (daysInMonth - day) + nextCut;
     } else {
       // 절기 이전 출생 → 이번달 절기까지 남은 날
@@ -1024,7 +1022,7 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
       daysToNode = day - cutDay;
     } else {
       // 절기 이전 출생 → 전달 절기에서 지난 날
-      const prevCut = jq[(month - 2 + 12) % 12]; // 전달 절기일 (0-indexed)
+      const prevCut = jq[(month - 2 + 12) % 12];
       const prevMonthDays = new Date(year, month - 1, 0).getDate();
       daysToNode = (prevMonthDays - prevCut) + day;
     }
