@@ -625,12 +625,6 @@
   /* ── 면책 ── */
   .disclaimer { text-align: center; font-size: 11px; color: var(--muted); line-height: 1.7; padding: 0 20px; }
 
-  /* ── 육친 성별 표시 ── */
-  .yukchins-gender-m { display: block; }
-  .yukchins-gender-f { display: none; }
-  body[data-gender="여"] .yukchins-gender-m { display: none; }
-  body[data-gender="여"] .yukchins-gender-f { display: block; }
-
   /* ── 반응형 ── */
   @media (max-width: 600px) {
     .input-card { padding: 28px 20px; }
@@ -1318,7 +1312,6 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
       <div class="card-title">🔮 십성(十星) 분포 — 위치별 가중치 반영</div>
       <div class="sipseong-tags">${ssTags || '<span style="color:var(--muted);font-size:13px">분석된 십성이 없습니다</span>'}</div>
       ${(() => {
-        // 상위 십성 기반 자동 해석
         const topSS = Object.entries(sipseong.count).filter(([,c])=>c>0).sort((a,b)=>b[1]-a[1]);
         const top1 = topSS[0]?.[0]; const top2 = topSS[1]?.[0];
         const SS_INTERP = {
@@ -1333,7 +1326,7 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
           편인:'전문성과 독창적 사고가 강합니다. 한 분야를 깊이 연구하거나 독자적인 길을 개척할 때 잠재력이 폭발합니다.',
           정인:'학습 능력과 수용력이 뛰어납니다. 귀인의 도움을 받기 쉬운 구조이며, 배움을 통해 지속적으로 성장하는 유형입니다.',
         };
-        const dual = top2 && topSS[0][1] === topSS[1][1]; // 공동 1위
+        const dual = top2 && topSS[0][1] === topSS[1][1];
         const interpText = top1
           ? (dual && top2
             ? `<strong>${top1}·${top2}</strong>가 함께 강한 구조입니다. ${SS_INTERP[top1]||''} 동시에 ${SS_INTERP[top2]||''}`
@@ -1345,6 +1338,75 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
         * 월지(月支)에 있는 십성이 격국의 핵심이며, 삶의 방향성에 가장 큰 영향을 줍니다.
       </div>
     </div>
+
+    <!-- 합충형파해 + 신살 현황 -->
+    ${(() => {
+      const hc = result.hapchung;
+      const ss = result.sinsal;
+
+      // 태그 렌더 헬퍼
+      const tag = (text, type) => {
+        const colors = {
+          hap:  { bg:'#E8F5E9', border:'#A5D6A7', text:'#1B5E20' },
+          samhap: { bg:'#E3F2FD', border:'#90CAF9', text:'#0D47A1' },
+          chung:{ bg:'#FBEAF0', border:'#F5C6CB', text:'#72243E' },
+          hyeong:{ bg:'#FFF3E0', border:'#FFCC80', text:'#E65100' },
+          pa:   { bg:'#F3E5F5', border:'#CE93D8', text:'#4A148C' },
+          hae:  { bg:'#FFF8E1', border:'#FFE082', text:'#F57F17' },
+          sinsal_good: { bg:'#E8F5E9', border:'#A5D6A7', text:'#1B5E20' },
+          sinsal_mid:  { bg:'#F1EFE8', border:'#D9D7CE', text:'#444441' },
+          sinsal_warn: { bg:'#FBEAF0', border:'#F5C6CB', text:'#72243E' },
+        };
+        const c = colors[type] || colors['sinsal_mid'];
+        return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;background:${c.bg};border:1px solid ${c.border};color:${c.text};margin:3px 3px 3px 0">${text}</span>`;
+      };
+
+      // 합충형파해 섹션
+      const hapItems = [
+        ...hc.cheonganHap.map(x => tag(`天 ${x.name}`, 'hap') + `<span style="font-size:10px;color:var(--muted);margin-left:2px">${x.pos}</span>`),
+        ...hc.jijiHap.map(x    => tag(`地 ${x.name}`, 'hap') + `<span style="font-size:10px;color:var(--muted);margin-left:2px">${x.pos}</span>`),
+        ...hc.samhap.map(x     => tag(x.name, 'samhap')),
+        ...hc.bang.map(x       => tag(x.name, 'samhap')),
+        ...hc.chung.map(x      => tag(`충 ${x.name}`, 'chung') + `<span style="font-size:10px;color:var(--muted);margin-left:2px">${x.pos}</span>`),
+        ...hc.hyeong.map(x     => tag(`형 ${x.name}`, 'hyeong')),
+        ...hc.pa.map(x         => tag(`파 ${x.name}`, 'pa') + `<span style="font-size:10px;color:var(--muted);margin-left:2px">${x.pos}</span>`),
+        ...hc.hae.map(x        => tag(`해 ${x.name}`, 'hae') + `<span style="font-size:10px;color:var(--muted);margin-left:2px">${x.pos}</span>`),
+      ];
+
+      // 신살 섹션
+      const SINSAL_TYPE = {
+        '천을귀인(天乙貴人)': 'sinsal_good', '문창귀인(文昌貴人)': 'sinsal_good',
+        '역마살(驛馬殺)': 'sinsal_mid', '도화살(桃花殺)': 'sinsal_mid',
+        '양인살(羊刃殺)': 'sinsal_warn', '괴강살(魁罡殺)': 'sinsal_warn', '백호대살(白虎大殺)': 'sinsal_warn',
+      };
+      const sinsalItems = ss.map(s => {
+        const t = Object.keys(SINSAL_TYPE).find(k => s.name.startsWith(k.split('(')[0]));
+        const type = t ? SINSAL_TYPE[t] : 'sinsal_mid';
+        return `<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:4px">${tag(s.name, type)}<span style="font-size:11px;color:var(--muted);padding-top:4px">${s.pos} — ${s.desc}</span></div>`;
+      });
+
+      const hapSection = hapItems.length
+        ? `<div style="margin-bottom:14px">
+            <div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.06em;margin-bottom:8px">합·충·형·파·해</div>
+            <div style="display:flex;flex-wrap:wrap;gap:2px;align-items:center">${hapItems.join(' ')}</div>
+           </div>`
+        : `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.06em;margin-bottom:6px">합·충·형·파·해</div><span style="font-size:12px;color:var(--muted)">원국 내 해당 없음</span></div>`;
+
+      const ssSection = sinsalItems.length
+        ? `<div><div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.06em;margin-bottom:8px">신살(神殺)</div>${sinsalItems.join('')}</div>`
+        : `<div><div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.06em;margin-bottom:6px">신살(神殺)</div><span style="font-size:12px;color:var(--muted)">해당 신살 없음</span></div>`;
+
+      return `<div class="analysis-card" style="margin-bottom:20px">
+        <div class="card-title">⚡ 합충형파해 · 신살(神殺) 현황</div>
+        <div class="card-body">
+          ${hapSection}
+          <div style="border-top:1px solid var(--border);padding-top:14px">${ssSection}</div>
+          <div style="margin-top:12px;font-size:11px;color:var(--muted);line-height:1.6">
+            * 합충형파해·신살의 <strong>실제 발동 시점·강도·해소법</strong>은 대운·세운과의 교차 분석이 필요합니다. 심층 풀이에서 확인하세요.
+          </div>
+        </div>
+      </div>`;
+    })()}
 
     <!-- 용신(用神) · 총평 섹션 -->
     ${(() => {
@@ -1499,7 +1561,6 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
 
   const resultEl = document.getElementById('result');
   resultEl.innerHTML = html;
-  document.body.setAttribute('data-gender', gender); // 육친 성별 표시용
   document.getElementById('loading').style.display = 'none';
   resultEl.style.display = 'block';
   resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
