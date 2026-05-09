@@ -287,7 +287,7 @@ const SajuEngine = (() => {
   // 입절 이후 월지 인덱스: 1월→인(2), 2월→묘(3) ... 12월→축(1)
   const MB_AFTER  = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0];
   // 입절 이전 월지 인덱스: 1월→축(1), 2월→인(2) ...
-  const MB_BEFORE = [10, 11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+  const MB_BEFORE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
   // 월간 5호둔법 기준 (연간 인덱스 % 5 → 인월 천간 인덱스)
   // 갑기→병인(2), 을경→무인(4), 병신→경인(6=0mod10 맞게), 정임→임인(8), 무계→갑인(0)
@@ -308,11 +308,19 @@ const SajuEngine = (() => {
   // ─── 만세력 계산 ────────────────────────────────────────────────
 
   /**
-   * 연주(年柱) 계산 — 갑자년 = 서기 4년 기준
+   * 연주(年柱) 계산 — 입춘(2월 절기) 기준으로 연도 전환
+   * 1월은 항상 전년도, 2월은 입춘일 이전이면 전년도
    */
-  function getYeonju(year) {
-    const stemIdx   = ((year - 4) % 10 + 10) % 10;
-    const branchIdx = ((year - 4) % 12 + 12) % 12;
+  function getYeonju(year, month, day) {
+    let effectiveYear = year;
+    if (month === 1) {
+      effectiveYear = year - 1;
+    } else if (month === 2) {
+      const jq = getJieqi(year);
+      if (day < jq[1]) effectiveYear = year - 1;
+    }
+    const stemIdx   = ((effectiveYear - 4) % 10 + 10) % 10;
+    const branchIdx = ((effectiveYear - 4) % 12 + 12) % 12;
     return {
       stemIdx, branchIdx,
       gan:   CHEONGAN[stemIdx],
@@ -331,8 +339,16 @@ const SajuEngine = (() => {
     const cut = jq[month - 1];
     const mb  = day >= cut ? MB_AFTER[month - 1] : MB_BEFORE[month - 1];
 
-    const yStemIdx = ((year - 4) % 10 + 10) % 10;
-    const order    = (mb - 2 + 12) % 12;   // 인월(지지인덱스 2)부터의 순서
+    // 연간은 입춘 기준 연도로 결정 (getYeonju와 동일 로직)
+    let effectiveYear = year;
+    if (month === 1) {
+      effectiveYear = year - 1;
+    } else if (month === 2 && day < jq[1]) {
+      effectiveYear = year - 1;
+    }
+
+    const yStemIdx = ((effectiveYear - 4) % 10 + 10) % 10;
+    const order    = (mb - 2 + 12) % 12;
     const mStemIdx = (BASE_STEM_H[yStemIdx % 5] + order) % 10;
 
     return {
@@ -1028,6 +1044,11 @@ ${ss.detail}<br><br>
         style: '가족 형제 또는 동료·경쟁자와의 관계가 삶의 핵심 변수입니다. 협력이 잘 되면 큰 시너지가 나지만, 역할과 경계가 불분명하면 갈등·경쟁으로 번지기 쉽습니다.',
         note:  '비겁 과다는 재성(財星)을 극하는 구조로, 형제·동료 간 재물 거래나 동업은 명확한 계약이 전제되어야 합니다.',
       },
+      bijeon2: { // 비견 2개
+        bond:  '비견이 2개로, 형제·자매 또는 동료와의 인연이 적지 않은 구조입니다.',
+        style: '형제나 가까운 동료와의 관계가 삶에 직접적인 영향을 줍니다. 독립심이 강하면서도 동류 집단과의 연대에서 힘을 얻는 타입입니다.',
+        note:  '비견이 겹치면 경쟁 상황에서 오히려 동기가 올라갑니다. 단, 같은 목표를 두고 갈등이 생기지 않도록 역할 구분이 중요합니다.',
+      },
       bijeon1: { // 비견 1개만
         bond:  '비견이 1개로, 형제·자매와의 인연이 그리 두텁지 않은 구조입니다.',
         style: '혈연 형제보다 직장·사회에서 만난 동료나 파트너와의 관계가 실질적으로 더 중요한 동력이 됩니다. 형제에게 크게 기대거나 의지하기보다 각자의 길을 가는 패턴입니다.',
@@ -1055,7 +1076,8 @@ ${ss.detail}<br><br>
     if (totalBG >= 3) siblingKey = 'strong';
     else if (totalBG === 0) siblingKey = 'none';
     else if (bijeonCount >= 1 && geobjaCount >= 1) siblingKey = 'mixed';
-    else if (bijeonCount >= 1) siblingKey = 'bijeon1';
+    else if (bijeonCount >= 2) siblingKey = 'bijeon2';
+    else if (bijeonCount === 1) siblingKey = 'bijeon1';
     else siblingKey = 'geobja1';
 
     const si = SIBLING_INTERP[siblingKey];
@@ -1315,7 +1337,7 @@ ${ss.detail}<br><br>
 
 
   function analyze(year, month, day, hour) {
-    const yeonju = getYeonju(year);
+    const yeonju = getYeonju(year, month, day);
     const wolju  = getWolju(year, month, day);
     const ilju   = getIlju(year, month, day);
     const siju   = getSiju(hour, ilju.stemIdx);
