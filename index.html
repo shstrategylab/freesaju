@@ -916,6 +916,34 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
     </div></td>`;
   }).join('');
 
+  // 지장간 행 — 지지 바로 아래에 인라인으로 표시
+  const jjgPillarMap = {
+    '시주 (時柱)': result.jijanggan.si,
+    '일주 (日柱)': result.jijanggan.il,
+    '월주 (月柱)': result.jijanggan.wol,
+    '년주 (年柱)': result.jijanggan.yeon,
+  };
+  const jjgRow = pillarDefs.map(p => {
+    const jjg = jjgPillarMap[p.label] || [];
+    const byType = t => jjg.find(g => g.type === t);
+    const jjgCell = (item) => item
+      ? `<span style="font-size:11px;font-weight:600;color:var(--ink)">${item.ganHJ}</span><span style="font-size:9px;color:var(--muted);display:block">${item.ss}</span>`
+      : `<span style="font-size:10px;color:var(--border)">—</span>`;
+    return `<td><div style="background:var(--paper2);border:1px solid var(--border);border-radius:10px;padding:8px 6px;min-width:90px;text-align:center">
+      <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap">
+        ${['y','m','j'].map(t => {
+          const item = byType(t);
+          const typeLabel = t === 'y' ? '여기' : t === 'm' ? '중기' : '정기';
+          const isFontBold = t === 'j';
+          return item ? `<div style="text-align:center;min-width:28px">
+            <span style="font-size:8px;color:var(--muted);display:block;margin-bottom:2px">${typeLabel}</span>
+            <span style="font-size:${isFontBold?'13px':'11px'};font-weight:${isFontBold?700:500};color:${isFontBold?'var(--ink)':'var(--muted)'}">${item.ganHJ}</span>
+          </div>` : '';
+        }).join('')}
+      </div>
+    </div></td>`;
+  }).join('');
+
   // 오행 바 차트 — 순수 비율 기반, 숫자는 막대 위 플로팅
   const maxDist = Math.max(...Object.values(dist), 1);
   const BAR_MAX_H = 72; // 컨테이너(92px)에서 숫자 공간 확보
@@ -1264,6 +1292,7 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
         <tbody>
           <tr><th style="font-size:11px;color:var(--muted)">천간</th>${ganRow}</tr>
           <tr><th style="font-size:11px;color:var(--muted)">지지</th>${jiRow}</tr>
+          <tr><th style="font-size:10px;color:var(--muted);line-height:1.3">지장간<br><span style="font-weight:400;opacity:.7">여·중·정</span></th>${jjgRow}</tr>
         </tbody>
       </table>
       <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px">
@@ -1287,61 +1316,6 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
       <div class="sipseong-tags">${ssTags || '<span style="color:var(--muted);font-size:13px">분석된 십성이 없습니다</span>'}</div>
       <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.6">
         * 월지(月支)에 있는 십성이 격국의 핵심이며, 삶의 방향성에 가장 큰 영향을 줍니다.
-      </div>
-    </div>
-
-    <!-- 분석 카드들 -->
-    <div class="analysis-grid">
-      ${readingCards}
-      ${bonusLocked}
-    </div>
-
-    <!-- 지장간(地藏干) 테이블 -->
-    <div class="analysis-card wide" style="margin-top:8px">
-      <div class="card-title">🔑 지장간(地藏干) — 지지 속에 숨겨진 천간의 기운</div>
-      <div class="card-body">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">
-          겉으로 드러나는 천간(4자) 외에, 지지 속에 숨겨진 천간의 기운입니다. 내면 심리·잠재력·통근(通根) 여부를 판단하는 핵심 데이터입니다.
-        </div>
-        <div style="overflow-x:auto">
-          <table style="width:100%;border-collapse:collapse;font-size:12px">
-            <thead>
-              <tr style="background:var(--bg-secondary);color:var(--muted);text-align:center">
-                <th style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:left">기둥</th>
-                <th style="padding:6px 8px;border-bottom:1px solid var(--border)">지지</th>
-                <th style="padding:6px 8px;border-bottom:1px solid var(--border)">여기(餘氣)</th>
-                <th style="padding:6px 8px;border-bottom:1px solid var(--border)">중기(中氣)</th>
-                <th style="padding:6px 8px;border-bottom:1px solid var(--border)">정기(正氣)</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${[
-                { label: '연주', jiHJ: yeonju.jiHJ, ji: yeonju.ji, jjg: result.jijanggan.yeon },
-                { label: '월주', jiHJ: wolju.jiHJ,  ji: wolju.ji,  jjg: result.jijanggan.wol  },
-                { label: '일주', jiHJ: ilju.jiHJ,   ji: ilju.ji,   jjg: result.jijanggan.il   },
-                ...(siju ? [{ label: '시주', jiHJ: siju.jiHJ, ji: siju.ji, jjg: result.jijanggan.si }] : []),
-              ].map(row => {
-                const byType = t => row.jjg.find(g => g.type === t);
-                const cell = (item) => item
-                  ? `<span style="font-weight:600">${item.ganHJ}(${item.gan})</span><br>
-                     <span class="ss-tag" style="font-size:10px;padding:1px 5px">${item.ss}</span><br>
-                     <span style="color:var(--muted);font-size:10px">${item.days}일</span>`
-                  : `<span style="color:var(--border)">—</span>`;
-                return `<tr style="text-align:center;border-bottom:1px solid var(--border)">
-                  <td style="padding:8px;text-align:left;color:var(--muted)">${row.label}</td>
-                  <td style="padding:8px"><strong>${row.jiHJ}</strong><br><span style="font-size:10px;color:var(--muted)">${row.ji}</span></td>
-                  <td style="padding:8px">${cell(byType('y'))}</td>
-                  <td style="padding:8px">${cell(byType('m'))}</td>
-                  <td style="padding:8px">${cell(byType('j'))}</td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-        </div>
-        <div style="margin-top:12px;font-size:11px;color:var(--muted);line-height:1.7">
-          * <strong>통근(通根)</strong>: 천간에 있는 글자와 같은 오행이 지장간에 있을 때 "뿌리를 내렸다"고 합니다. 뿌리 있는 천간은 현실에서 실제 추진력을 발휘하고, 뿌리 없는 천간은 생각은 많아도 실천력이 부족한 경향이 있습니다.<br>
-          * <strong>정기(正氣)</strong>가 격국·용신 결정의 핵심이며, <strong>월지 정기</strong>가 그 중 가장 강한 영향력을 가집니다.
-        </div>
       </div>
     </div>
 
@@ -1404,6 +1378,12 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
         </div>
       </div>`;
     })()}
+
+    <!-- 분석 카드들 -->
+    <div class="analysis-grid">
+      ${readingCards}
+      ${bonusLocked}
+    </div>
 
     <!-- 대운 섹션 — 현재 대운 무료 공개 + 나머지 잠금 -->
     <div class="daeun-locked-section">
