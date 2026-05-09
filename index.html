@@ -853,6 +853,7 @@ function runAnalysis() {
 /* ── 결과 렌더링 ── */
 function renderResult(data, year, month, day, hour, gender, lunarInfo) {
   const { yeonju, wolju, ilju, siju, sipseong, dist, balance, geokguk, reading, cheoneul } = data;
+  const result = data; // 지장간·용신 등 전체 접근용
 
   const OHENG_COLOR = { 목:'#4a7c59', 화:'#c0392b', 토:'#c8973a', 금:'#d0d0d0', 수:'#2c3e50' };
   const OHENG_CHAR  = SajuEngine.OHENG_CHAR;
@@ -953,10 +954,12 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
   // 0: 타고난 성품, 1: 사주 핵심 구조(일간×격국), 2: 신강/신약
   // 3: 오행 과부족 패턴, 4: 연애·결혼 스타일, 5: 월지 핵심 십성
   const WIDE_CARDS = new Set([0, 1]);
+  const WIDE_TAGS  = new Set(['personality', 'job', 'yukchins']);
 
   const readingCards = reading.map((r, i) => {
-    const wide = WIDE_CARDS.has(i) ? ' wide' : '';
-    return `<div class="analysis-card${wide}" style="animation-delay:${i*0.12}s">
+    if (r.isYongsin) return ''; // 용신은 별도 섹션
+    const wide = (WIDE_CARDS.has(i) || WIDE_TAGS.has(r.tag)) ? ' wide' : '';
+    return `<div class="analysis-card${wide}" style="animation-delay:${i * 0.12}s">
       <div class="card-title">${r.title}</div>
       <div class="card-body">${r.content}</div>
     </div>`;
@@ -1292,6 +1295,115 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
       ${readingCards}
       ${bonusLocked}
     </div>
+
+    <!-- 지장간(地藏干) 테이블 -->
+    <div class="analysis-card wide" style="margin-top:8px">
+      <div class="card-title">🔑 지장간(地藏干) — 지지 속에 숨겨진 천간의 기운</div>
+      <div class="card-body">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">
+          겉으로 드러나는 천간(4자) 외에, 지지 속에 숨겨진 천간의 기운입니다. 내면 심리·잠재력·통근(通根) 여부를 판단하는 핵심 데이터입니다.
+        </div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead>
+              <tr style="background:var(--bg-secondary);color:var(--muted);text-align:center">
+                <th style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:left">기둥</th>
+                <th style="padding:6px 8px;border-bottom:1px solid var(--border)">지지</th>
+                <th style="padding:6px 8px;border-bottom:1px solid var(--border)">여기(餘氣)</th>
+                <th style="padding:6px 8px;border-bottom:1px solid var(--border)">중기(中氣)</th>
+                <th style="padding:6px 8px;border-bottom:1px solid var(--border)">정기(正氣)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[
+                { label: '연주', jiHJ: yeonju.jiHJ, ji: yeonju.ji, jjg: result.jijanggan.yeon },
+                { label: '월주', jiHJ: wolju.jiHJ,  ji: wolju.ji,  jjg: result.jijanggan.wol  },
+                { label: '일주', jiHJ: ilju.jiHJ,   ji: ilju.ji,   jjg: result.jijanggan.il   },
+                ...(siju ? [{ label: '시주', jiHJ: siju.jiHJ, ji: siju.ji, jjg: result.jijanggan.si }] : []),
+              ].map(row => {
+                const byType = t => row.jjg.find(g => g.type === t);
+                const cell = (item) => item
+                  ? `<span style="font-weight:600">${item.ganHJ}(${item.gan})</span><br>
+                     <span class="ss-tag" style="font-size:10px;padding:1px 5px">${item.ss}</span><br>
+                     <span style="color:var(--muted);font-size:10px">${item.days}일</span>`
+                  : `<span style="color:var(--border)">—</span>`;
+                return `<tr style="text-align:center;border-bottom:1px solid var(--border)">
+                  <td style="padding:8px;text-align:left;color:var(--muted)">${row.label}</td>
+                  <td style="padding:8px"><strong>${row.jiHJ}</strong><br><span style="font-size:10px;color:var(--muted)">${row.ji}</span></td>
+                  <td style="padding:8px">${cell(byType('y'))}</td>
+                  <td style="padding:8px">${cell(byType('m'))}</td>
+                  <td style="padding:8px">${cell(byType('j'))}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px;font-size:11px;color:var(--muted);line-height:1.7">
+          * <strong>통근(通根)</strong>: 천간에 있는 글자와 같은 오행이 지장간에 있을 때 "뿌리를 내렸다"고 합니다. 뿌리 있는 천간은 현실에서 실제 추진력을 발휘하고, 뿌리 없는 천간은 생각은 많아도 실천력이 부족한 경향이 있습니다.<br>
+          * <strong>정기(正氣)</strong>가 격국·용신 결정의 핵심이며, <strong>월지 정기</strong>가 그 중 가장 강한 영향력을 가집니다.
+        </div>
+      </div>
+    </div>
+
+    <!-- 용신(用神) · 총평 섹션 -->
+    ${(() => {
+      const { yongsin, shingang } = result;
+      const ohChar = SajuEngine.OHENG_CHAR;
+      const ohDot = (ohName) => `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:99px;padding:2px 10px;font-size:12px;font-weight:500">
+        <span style="width:8px;height:8px;border-radius:50%;background:${ohChar[ohName]?.color||'#888'};display:inline-block"></span>
+        ${ohChar[ohName]?.label||ohName}
+      </span>`;
+
+      const ysList  = yongsin.yongsin.map(y => `${ohDot(y.oh)}<small style="color:var(--muted);font-size:11px"> ${y.ss}</small>`).join(' ');
+      const hsList  = yongsin.heesin.map(y  => ohDot(y.oh)).join(' ');
+      const gsList  = yongsin.gisin.map(y   => ohDot(y.oh)).join(' ');
+
+      // 오행별 총평 문장
+      const OH_SUMMARY = {
+        목: '木의 기운이 강할 때 기획력과 추진력이 살아납니다.',
+        화: '火의 기운이 강할 때 표현력과 사교 에너지가 극대화됩니다.',
+        토: '土의 기운이 강할 때 중심을 잡고 안정적인 흐름이 만들어집니다.',
+        금: '金의 기운이 강할 때 결단력과 실행력이 올라갑니다.',
+        수: '水의 기운이 강할 때 직관과 유연한 전략적 사고가 빛납니다.',
+      };
+      const ysOhSummary = yongsin.yongsin.map(y => OH_SUMMARY[y.oh]).join(' ');
+
+      return `<div class="analysis-card wide" style="margin-top:8px">
+        <div class="card-title">🎯 용신(用神) · 총평</div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+            <div style="background:var(--bg-secondary);border-radius:10px;padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:.04em">용신(用神) — 쓸 기운</div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center">${ysList}</div>
+            </div>
+            <div style="background:var(--bg-secondary);border-radius:10px;padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:.04em">희신(喜神) — 도움 기운</div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center">${hsList}</div>
+            </div>
+            <div style="background:var(--bg-secondary);border-radius:10px;padding:12px;text-align:center">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:.04em">기신(忌神) — 피할 기운</div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center">${gsList}</div>
+            </div>
+          </div>
+          <div style="font-size:13px;line-height:1.8;color:var(--text)">
+            이 사주는 <strong>${shingang.type}</strong>입니다.
+            용신 오행인 <strong>${yongsin.yongsin.map(y=>SajuEngine.OHENG_CHAR[y.oh]?.label||y.oh).join('·')}</strong>의 기운이 강해지는 대운·세운이 전반적인 상승기이며,
+            기신 오행인 <strong>${yongsin.gisin.map(y=>SajuEngine.OHENG_CHAR[y.oh]?.label||y.oh).join('·')}</strong>의 기운이 강해지는 시기는 에너지 소모와 마찰이 커지는 구간입니다.
+            ${ysOhSummary}
+          </div>
+          <div style="margin-top:14px;padding:12px 14px;background:var(--bg-secondary);border-radius:10px;font-size:12px;line-height:1.75;color:var(--text)">
+            <strong>총평:</strong>
+            ${ilganInfo.name || ''} 일간으로 <strong>${geokguk}</strong>의 그릇을 타고났습니다.
+            ${shingang.level === 'strong'
+              ? '사주의 에너지가 충분하여 자신만의 목표와 방향이 뚜렷할 때 역량이 극대화됩니다. 이 에너지를 올바른 그릇(용신 방향)에 쏟는 것이 삶의 핵심 과제입니다.'
+              : shingang.level === 'weak'
+              ? '섬세하고 감수성이 풍부한 사주입니다. 좋은 환경·조력자·공부(인성)를 만났을 때 잠재된 역량이 폭발적으로 발현됩니다. 혼자 버티기보다 연대와 협력이 성공 전략입니다.'
+              : '에너지의 균형이 잡혀 있어 극단적 기복 없이 꾸준한 성과를 쌓아가는 타입입니다. 전문성의 깊이를 의도적으로 파는 것이 두각을 나타내는 열쇠입니다.'}
+            용신(${yongsin.yongsin.map(y=>y.oh).join('·')}) 방향의 직업·환경·관계를 선택할 때 흐름이 가장 자연스럽게 열립니다.
+          </div>
+        </div>
+      </div>`;
+    })()}
 
     <!-- 대운 섹션 — 현재 대운 무료 공개 + 나머지 잠금 -->
     <div class="daeun-locked-section">
