@@ -13,42 +13,24 @@
 
 const SajuEngine = (() => {
 
-  // ─── 기본 데이터 ────────────────────────────────────────────────
+  // ── 만세력 모듈 참조 ─────────────────────────────────────────────
+  const M = (typeof Manseryok !== 'undefined') ? Manseryok : require('./manseryok');
 
-  // 천간 (한글 / 한자)
-  const CHEONGAN    = ['갑','을','병','정','무','기','경','신','임','계'];
-  const CHEONGAN_HJ = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  // ─── 기본 데이터 (만세력 모듈에서 가져오기) ─────────────────────
 
-  // 지지 (한글 / 한자)
-  const JIJI    = ['자','축','인','묘','진','사','오','미','신','유','술','해'];
-  const JIJI_HJ = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
-
-  // 천간 오행 인덱스 (0목 1화 2토 3금 4수)
-  const STEM_OHENG_IDX = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4];
-
-  // 지지 오행 인덱스
-  const BRANCH_OHENG_IDX = [4, 2, 0, 0, 2, 1, 1, 2, 3, 3, 2, 4];
-
-  // 오행 이름 (인덱스 → 한글)
-  const OHENG_NAMES = ['목', '화', '토', '금', '수'];
-
-  // 천간/지지 → 오행·음양 매핑 (기존 호환용)
-  const CHEONGAN_OHENG = {};
-  const CHEONGAN_UMNYANG = {};
-  CHEONGAN.forEach((g, i) => {
-    CHEONGAN_OHENG[g]   = OHENG_NAMES[STEM_OHENG_IDX[i]];
-    CHEONGAN_UMNYANG[g] = i % 2 === 0 ? '양' : '음';
-  });
-
-  const JIJI_OHENG = {};
-  const JIJI_UMNYANG = {};
-  JIJI.forEach((j, i) => {
-    JIJI_OHENG[j]   = OHENG_NAMES[BRANCH_OHENG_IDX[i]];
-    JIJI_UMNYANG[j] = i % 2 === 0 ? '양' : '음';
-  });
-
-  // 지지별 대표 천간 인덱스 (십성 음양 계산용)
-  const BRANCH_MAIN_STEM = [9, 5, 0, 1, 4, 2, 3, 5, 6, 7, 4, 8];
+  // 기본 데이터 — 만세력 모듈에서 가져오기
+  const CHEONGAN         = M.CHEONGAN;
+  const CHEONGAN_HJ      = M.CHEONGAN_HJ;
+  const JIJI             = M.JIJI;
+  const JIJI_HJ          = M.JIJI_HJ;
+  const STEM_OHENG_IDX   = M.STEM_OHENG_IDX;
+  const BRANCH_OHENG_IDX = M.BRANCH_OHENG_IDX;
+  const OHENG_NAMES      = M.OHENG_NAMES;
+  const CHEONGAN_OHENG   = M.CHEONGAN_OHENG;
+  const CHEONGAN_UMNYANG = M.CHEONGAN_UMNYANG;
+  const JIJI_OHENG       = M.JIJI_OHENG;
+  const JIJI_UMNYANG     = M.JIJI_UMNYANG;
+  const BRANCH_MAIN_STEM = M.BRANCH_MAIN_STEM;
 
   // ─── 지장간(地藏干) 데이터 ──────────────────────────────────────
   // 출처: 전통 분기 기준 (여기·중기·정기, 각 일수)
@@ -176,228 +158,14 @@ const SajuEngine = (() => {
     };
   }
 
-  // ─── 만세력 핵심 테이블 ─────────────────────────────────────────
-
-  /**
-   * 절기(입절) 일자 테이블
-   * key: 연도(없으면 default 사용), value: 각 월(1~12월) 입절일
-   * 해당 일 이후면 그 달 월지, 이전이면 전월 월지 적용
-   */
-  const JIEQI = {
-    // [소한,입춘,경칩,청명,입하,망종,소서,입추,백로,한로,입동,대설]
-    // index 0=1월, 1=2월, ..., 11=12월 / 해당 월의 절입일(해당일 이후 → 그 달 월지)
-    default: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 7, 7],
-    // ── 1940년대 ──
-    1944: [6, 5, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1945: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7],
-    1946: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1947: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1948: [6, 5, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1949: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7],
-    // ── 1950년대 ──
-    1950: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1951: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1952: [6, 5, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1953: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7],
-    1954: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1955: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1956: [6, 5, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1957: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7],
-    1958: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1959: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    // ── 1960년대 ──
-    1960: [6, 5, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1961: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7],
-    1962: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1963: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1964: [6, 5, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1965: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7],
-    1966: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1967: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1968: [6, 5, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1969: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7],
-    // ── 1970년대 ──
-    1970: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1971: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1972: [6, 5, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1973: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7],  // 한로 10/9
-    1974: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1975: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1976: [6, 5, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1977: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7],
-    1978: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1979: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    // ── 1980년대 ──
-    1980: [6, 5, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1981: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7],
-    1982: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1983: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1984: [6, 5, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1985: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1986: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1987: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1988: [6, 5, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1989: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7],
-    // ── 1990년대 ──
-    1990: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1991: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1992: [6, 5, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1993: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1994: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1995: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1996: [6, 5, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1997: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    1998: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    1999: [6, 4, 6, 5, 6, 6, 7, 8, 8, 9, 8, 8],
-    // ── 2000년대 ──
-    2000: [6, 5, 6, 5, 5, 6, 7, 8, 8, 8, 7, 7],
-    2001: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    2002: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    2003: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 8],
-    2004: [6, 5, 6, 5, 5, 6, 7, 8, 8, 8, 7, 7],
-    2005: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    2006: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    2007: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 8],
-    2008: [6, 5, 6, 5, 5, 6, 7, 8, 8, 8, 7, 7],
-    2009: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    // ── 2010년대 ──
-    2010: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    2011: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 8],
-    2012: [6, 5, 6, 5, 5, 6, 7, 8, 8, 8, 7, 7],
-    2013: [5, 4, 6, 5, 6, 6, 7, 7, 8, 8, 7, 7],
-    2014: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    2015: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 8],
-    2016: [6, 5, 6, 5, 5, 6, 7, 8, 8, 8, 7, 7],
-    2017: [5, 4, 6, 5, 6, 6, 7, 7, 8, 8, 7, 7],
-    2018: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    2019: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 8],
-    // ── 2020년대 ──
-    2020: [6, 4, 5, 5, 6, 6, 7, 8, 8, 8, 7, 7],
-    2021: [5, 3, 6, 5, 5, 6, 7, 7, 8, 8, 7, 7],
-    2022: [5, 4, 6, 5, 6, 6, 7, 7, 8, 8, 7, 7],
-    2023: [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 8, 7],
-    2024: [6, 10, 10, 9, 8, 6, 7, 4, 8, 8, 7, 7],
-    2025: [5, 3, 6, 5, 5, 6, 7, 7, 8, 8, 7, 7],
-  };
-
-  function getJieqi(year) {
-    return JIEQI[year] || JIEQI.default;
-  }
-
-  // 입절 이후 월지 인덱스: 1월→인(2), 2월→묘(3) ... 12월→축(1)
-  const MB_AFTER  = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0];
-  // 입절 이전 월지 인덱스: 1월→축(1), 2월→인(2) ...
-  const MB_BEFORE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-
-  // 월간 5호둔법 기준 (연간 인덱스 % 5 → 인월 천간 인덱스)
-  // 갑기→병인(2), 을경→무인(4), 병신→경인(6=0mod10 맞게), 정임→임인(8), 무계→갑인(0)
-  const BASE_STEM_H = [2, 4, 6, 8, 0];
-
-  // ─── 율리우스일수 계산 ──────────────────────────────────────────
-
-  /**
-   * 주어진 날짜의 율리우스일수(Julian Day Number) 반환 (그레고리력)
-   */
-  function julianDay(y, m, d) {
-    if (m <= 2) { y--; m += 12; }
-    const A = Math.floor(y / 100);
-    const B = 2 - A + Math.floor(A / 4);
-    return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + B - 1524;
-  }
-
-  // ─── 만세력 계산 ────────────────────────────────────────────────
-
-  /**
-   * 연주(年柱) 계산 — 입춘(2월 절기) 기준으로 연도 전환
-   * 1월은 항상 전년도, 2월은 입춘일 이전이면 전년도
-   */
-  function getYeonju(year, month, day) {
-    let effectiveYear = year;
-    if (month === 1) {
-      effectiveYear = year - 1;
-    } else if (month === 2) {
-      const jq = getJieqi(year);
-      if (day < jq[1]) effectiveYear = year - 1;
-    }
-    const stemIdx   = ((effectiveYear - 4) % 10 + 10) % 10;
-    const branchIdx = ((effectiveYear - 4) % 12 + 12) % 12;
-    return {
-      stemIdx, branchIdx,
-      gan:   CHEONGAN[stemIdx],
-      ji:    JIJI[branchIdx],
-      ganHJ: CHEONGAN_HJ[stemIdx],
-      jiHJ:  JIJI_HJ[branchIdx],
-      label: CHEONGAN[stemIdx] + JIJI[branchIdx],
-    };
-  }
-
-  /**
-   * 월주(月柱) 계산 — 절기 기반 입절일 보정
-   */
-  function getWolju(year, month, day) {
-    const jq  = getJieqi(year);
-    const cut = jq[month - 1];
-    const mb  = day >= cut ? MB_AFTER[month - 1] : MB_BEFORE[month - 1];
-
-    // 연간은 입춘 기준 연도로 결정 (getYeonju와 동일 로직)
-    let effectiveYear = year;
-    if (month === 1) {
-      effectiveYear = year - 1;
-    } else if (month === 2 && day < jq[1]) {
-      effectiveYear = year - 1;
-    }
-
-    const yStemIdx = ((effectiveYear - 4) % 10 + 10) % 10;
-    const order    = (mb - 2 + 12) % 12;
-    const mStemIdx = (BASE_STEM_H[yStemIdx % 5] + order) % 10;
-
-    return {
-      stemIdx: mStemIdx, branchIdx: mb,
-      gan:   CHEONGAN[mStemIdx],
-      ji:    JIJI[mb],
-      ganHJ: CHEONGAN_HJ[mStemIdx],
-      jiHJ:  JIJI_HJ[mb],
-      label: CHEONGAN[mStemIdx] + JIJI[mb],
-    };
-  }
-
-  /**
-   * 일주(日柱) 계산 — 율리우스일수 기반
-   * JD + 9 mod 10 = 천간, JD + 1 mod 12 = 지지
-   */
-  function getIlju(year, month, day) {
-    const jd        = julianDay(year, month, day);
-    const stemIdx   = ((jd + 9) % 10 + 10) % 10;
-    const branchIdx = ((jd + 1) % 12 + 12) % 12;
-    return {
-      stemIdx, branchIdx,
-      gan:   CHEONGAN[stemIdx],
-      ji:    JIJI[branchIdx],
-      ganHJ: CHEONGAN_HJ[stemIdx],
-      jiHJ:  JIJI_HJ[branchIdx],
-      label: CHEONGAN[stemIdx] + JIJI[branchIdx],
-    };
-  }
-
-  /**
-   * 시주(時柱) 계산 — 일간 5호둔법
-   * @param {number} hour        시각 (0~23, 음수면 시주 없음)
-   * @param {number} dayStemIdx  일간 천간 인덱스
-   */
-  function getSiju(hour, dayStemIdx) {
-    if (hour < 0) return null;
-    const branchIdx = hour === 23 ? 0 : Math.floor((hour + 1) / 2);
-    const BASE_H    = [0, 2, 4, 6, 8];
-    const stemIdx   = (BASE_H[dayStemIdx % 5] + branchIdx) % 10;
-    return {
-      stemIdx, branchIdx,
-      gan:   CHEONGAN[stemIdx],
-      ji:    JIJI[branchIdx],
-      ganHJ: CHEONGAN_HJ[stemIdx],
-      jiHJ:  JIJI_HJ[branchIdx],
-      label: CHEONGAN[stemIdx] + JIJI[branchIdx],
-    };
-  }
+  // ─── 만세력 계산 — 모두 Manseryok 모듈에 위임 ───────────────────
+  const JIEQI     = M.JIEQI;
+  const getJieqi  = M.getJieqi;
+  const getYeonju = M.getYeonju;
+  const getWolju  = M.getWolju;
+  const getIlju   = M.getIlju;
+  const getSiju   = M.getSiju;
+  const julianDay = M.julianDay;
 
   // ─── 천을귀인 ───────────────────────────────────────────────────
 
