@@ -1292,7 +1292,7 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
         <tbody>
           <tr><th style="font-size:11px;color:var(--muted)">천간</th>${ganRow}</tr>
           <tr><th style="font-size:11px;color:var(--muted)">지지</th>${jiRow}</tr>
-          <tr><th style="font-size:10px;color:var(--muted);line-height:1.3">지장간<br><span style="font-weight:400;opacity:.7">여·중·정</span></th>${jjgRow}</tr>
+          <tr><th style="font-size:10px;color:var(--muted)">지장간</th>${jjgRow}</tr>
         </tbody>
       </table>
       <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px">
@@ -1314,7 +1314,31 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
     <div class="analysis-card" style="margin-bottom:20px">
       <div class="card-title">🔮 십성(十星) 분포 — 위치별 가중치 반영</div>
       <div class="sipseong-tags">${ssTags || '<span style="color:var(--muted);font-size:13px">분석된 십성이 없습니다</span>'}</div>
-      <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.6">
+      ${(() => {
+        // 상위 십성 기반 자동 해석
+        const topSS = Object.entries(sipseong.count).filter(([,c])=>c>0).sort((a,b)=>b[1]-a[1]);
+        const top1 = topSS[0]?.[0]; const top2 = topSS[1]?.[0];
+        const SS_INTERP = {
+          비견:'자립심과 주체성이 강한 구조입니다. 독립적으로 일할 때 역량이 극대화되며, 경쟁 상황에서 오히려 동기부여가 됩니다.',
+          겁재:'강한 추진력과 승부욕을 가졌습니다. 에너지가 넘치지만 재물 변동이 생기기 쉬우니 지출 관리가 핵심입니다.',
+          식신:'재능과 표현력이 풍부한 구조입니다. 좋아하는 일을 깊이 파고들 때 자연스럽게 수입과 인정이 따라옵니다.',
+          상관:'창의성과 언변이 뛰어납니다. 기존 틀을 깨는 혁신적 사고가 강점이며, 예술·기획·강의 계열에서 두각을 나타냅니다.',
+          편재:'큰 기회를 포착하는 감각이 예리합니다. 활동 무대가 넓고 사교적이며, 고정 수입보다 변동성 있는 수익 구조에 강합니다.',
+          정재:'성실하고 꼼꼼한 자산 관리 능력을 타고났습니다. 안정적인 수입 기반을 쌓고 장기적으로 부를 축적하는 유형입니다.',
+          편관:'강한 책임감과 결단력이 있습니다. 압박 상황에서 오히려 빛을 발하며, 리더십·경쟁·도전적 환경에 적합합니다.',
+          정관:'원칙과 명예를 중시하는 구조입니다. 조직 내 신뢰를 쌓고 꾸준히 성장하는 유형으로, 안정적인 직업군에서 강점을 발휘합니다.',
+          편인:'전문성과 독창적 사고가 강합니다. 한 분야를 깊이 연구하거나 독자적인 길을 개척할 때 잠재력이 폭발합니다.',
+          정인:'학습 능력과 수용력이 뛰어납니다. 귀인의 도움을 받기 쉬운 구조이며, 배움을 통해 지속적으로 성장하는 유형입니다.',
+        };
+        const dual = top2 && topSS[0][1] === topSS[1][1]; // 공동 1위
+        const interpText = top1
+          ? (dual && top2
+            ? `<strong>${top1}·${top2}</strong>가 함께 강한 구조입니다. ${SS_INTERP[top1]||''} 동시에 ${SS_INTERP[top2]||''}`
+            : `가장 강하게 드러나는 십성은 <strong>${top1}</strong>입니다. ${SS_INTERP[top1]||''}`)
+          : '';
+        return interpText ? `<div style="margin-top:14px;padding:12px 14px;background:rgba(200,151,58,.05);border:1px solid rgba(200,151,58,.15);border-radius:10px;font-size:13px;line-height:1.75;color:var(--ink)">${interpText}</div>` : '';
+      })()}
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.6">
         * 월지(月支)에 있는 십성이 격국의 핵심이며, 삶의 방향성에 가장 큰 영향을 줍니다.
       </div>
     </div>
@@ -1342,7 +1366,7 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
       };
       const ysOhSummary = yongsin.yongsin.map(y => OH_SUMMARY[y.oh]).join(' ');
 
-      return `<div class="analysis-card wide" style="margin-top:8px">
+      return `<div class="analysis-card wide" style="margin-top:24px;margin-bottom:24px">
         <div class="card-title">🎯 용신(用神) · 총평</div>
         <div class="card-body">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
