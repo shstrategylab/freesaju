@@ -128,6 +128,71 @@
     -webkit-appearance: none;
     width: 100%;
   }
+  /* 대운 칩 현재 강조 */
+  .daeun-year-chip.daeun-current {
+    border: 2px solid var(--gold);
+    background: rgba(200,151,58,.07);
+  }
+  .dy-ss { display:block; margin-top:4px; }
+
+  /* 현재 대운 상세 카드 */
+  .current-daeun-card {
+    background: var(--card-bg);
+    border: 1.5px solid rgba(200,151,58,.35);
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin: 12px 0;
+    backdrop-filter: blur(6px);
+  }
+  .cdc-header {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 14px; padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cdc-badge {
+    font-size: 11px; font-weight: 600; padding: 3px 10px;
+    border-radius: 20px; background: var(--gold); color: #fff;
+  }
+  .cdc-period { font-size: 12px; color: var(--muted); }
+  .cdc-flow { font-size: 12px; font-weight: 600; margin-left: auto; }
+  .cdc-ganjj { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .cdc-char {
+    font-size: 28px; font-weight: 700; color: #fff;
+    width: 48px; height: 48px; border-radius: 12px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .cdc-ss-row { display: flex; flex-direction: column; gap: 4px; }
+  .cdc-body { font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .cdc-body strong { color: var(--ink); }
+
+  /* 세운 카드 */
+  .seun-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin: 10px 0 12px;
+  }
+  .seun-header {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .seun-year-badge {
+    font-size: 11px; font-weight: 600; padding: 2px 9px;
+    border-radius: 20px; background: var(--navy); color: #fff;
+  }
+  .seun-ganjj { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .seun-body { font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .seun-body strong { color: var(--ink); }
+  .seun-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .seun-tag {
+    font-size: 11px; padding: 2px 9px; border-radius: 99px;
+    border: 1px solid transparent;
+  }
+  .seun-tag.pos { background: #E1F5EE; color: #085041; border-color: #B2DFCE; }
+  .seun-tag.neg { background: #FBEAF0; color: #72243E; border-color: #F5C6CB; }
+  .seun-tag.neu { background: #F1EFE8; color: #444441; border-color: #D9D7CE; }
+
   select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b5e4e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
@@ -898,16 +963,16 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
 
   const bonusLocked = [
     {
-      title: '💰 재물·사업운 심층 분석',
-      teaser: `이 사주는 <strong>${financeSS}</strong> 계열이 두드러집니다. ${financeSS === '편재(偏財)' ? '큰 기회를 잡는 대범함이 재물의 원천이지만, 변동성도 큽니다.' : '성실하고 꼼꼼한 관리가 재물을 쌓는 핵심입니다.'} 재물이 가장 강하게 들어오는 시기와 조심해야 할 시기, 맞는 투자 방식은...`,
+      title: '💰 재물·직업운 심층 분석',
+      teaser: `이 사주는 <strong>${financeSS}</strong> 계열이 두드러집니다. ${financeSS === '편재(偏財)' ? '큰 기회를 잡는 대범함이 재물의 원천이지만, 변동성도 큽니다. 언제 크게 벌고 언제 지출이 폭발하는지' : '성실하고 꼼꼼한 관리가 재물을 쌓는 핵심입니다. 어떤 자산 구조가 이 사주에 맞는지'}, 재물이 가장 강하게 들어오는 대운 시기, 그리고 지금 직업이 사주와 얼마나 맞는지를 분석합니다.`,
     },
     {
-      title: '🩺 건강 주의 패턴',
-      teaser: `오행 분포상 <strong>${healthOh}</strong> 계통이 가장 약한 지점으로 나타납니다. 이 기운이 흔들리는 대운·세운에 해당 장기 관련 증상이 나타날 수 있습니다. 구체적인 주의 시기와 보완 방법은...`,
+      title: '🩺 건강·체력 주의 패턴',
+      teaser: `오행 분포상 <strong>${healthOh}</strong> 계통이 가장 약한 지점입니다. 이 기운이 흔들리는 대운·세운에 해당 부위 증상이 실제로 나타나는 경우가 많습니다. 어느 나이대에 집중적으로 관리해야 하는지, 지금 대운에서 체력 소모가 어떤 패턴인지 구체적으로 분석합니다.`,
     },
     {
-      title: '🌊 대운(大運) 10년 흐름 전체 해석',
-      teaser: `${ilju.gan}일간 ${geokguk}의 대운은 단순히 길흉이 아니라 "어떤 기운이 들어와 내 사주와 어떻게 반응하는가"로 읽습니다. 현재 대운이 내 사주를 도와주는지, 충돌하는지, 그리고 2025·2026년 세운과의 겹침은...`,
+      title: '🌊 대운 전체 + 세운별 월 흐름',
+      teaser: `현재 대운 이후의 흐름, 그리고 2027년 이후 세운이 이 사주와 어떻게 반응하는지를 봅니다. 단순한 길흉이 아니라 <strong>"지금 대운이 내 격국을 도와주는가, 충돌하는가"</strong>의 관점으로 읽어드립니다. 충·합·형 발생 시기와 대처 전략까지 포함합니다.`,
     },
   ].map((c, i) => `
     <div class="analysis-card locked wide" style="animation-delay:${(i + reading.length) * 0.12}s">
@@ -920,16 +985,169 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
       </div>
     </div>`).join('');
 
-  // ── 대운 섹션 (엔진 미구현 — 더미 데이터로 티저) ──
-  const GANJJ = ['갑자','을축','병인','정묘','무진','기사','경오','신미','임신','계유'];
-  const daeunStart = (ilju.stemIdx % 3) + 3;
-  const daeunChips = GANJJ.slice(0, 5).map((gj, i) => {
-    const age = daeunStart + i * 10;
-    const visible = i < 2;
-    return `<div class="daeun-year-chip${visible ? '' : ' locked-chip'}">
-      <span class="dy-age">${age}~${age+9}세</span>
-      <span class="dy-ganjj">${visible ? gj : '??'}</span>
-      <span class="dy-content">${visible ? '— 분석 중 —' : '████████'}</span>
+  // ── 대운 실제 계산 ──
+  // 대운수: 월주 천간 기준 순행/역행 결정
+  // 양남음녀 → 순행, 음남양녀 → 역행
+  const ilganUmnyang = SajuEngine.CHEONGAN_UMNYANG[ilju.gan]; // '양' or '음'
+  const isForward = (gender === '남' && ilganUmnyang === '양') || (gender === '여' && ilganUmnyang === '음');
+
+  // 대운수 계산: 절기까지의 날수 / 3 (간략 계산, 월주 기반)
+  // 정밀 절기일 계산 대신 3~9 사이 값으로 추정 (엔진 데이터 기반)
+  const jq = SajuEngine.JIEQI[year] || SajuEngine.JIEQI.default;
+  const cutDay = jq[month - 1];
+  let daysToNode;
+  if (isForward) {
+    // 순행: 다음 절기까지 남은 날
+    const daysInMonth = new Date(year, month, 0).getDate();
+    daysToNode = Math.abs(daysInMonth - day + cutDay);
+  } else {
+    // 역행: 지난 절기까지의 날
+    daysToNode = Math.abs(day - cutDay);
+  }
+  const daeunSu = Math.max(1, Math.min(9, Math.round(daysToNode / 3))) || 5;
+
+  // 대운 간지 순서 (월주에서 순행/역행으로 10개)
+  const CHEONGAN = SajuEngine.CHEONGAN;
+  const CHEONGAN_HJ = SajuEngine.CHEONGAN_HJ;
+  const JIJI = SajuEngine.JIJI;
+  const JIJI_HJ = SajuEngine.JIJI_HJ;
+  const CHEONGAN_OHENG = SajuEngine.CHEONGAN_OHENG;
+  const JIJI_OHENG = SajuEngine.JIJI_OHENG;
+  const SIPSEONG_DATA = SajuEngine.SIPSEONG;
+
+  function calcDaeunSipseong(targetStemIdx) {
+    return SajuEngine.getStemSipseong(ilju.stemIdx, targetStemIdx);
+  }
+  function calcDaeunJiSipseong(targetBranchIdx) {
+    return SajuEngine.getBranchSipseong(ilju.stemIdx, targetBranchIdx);
+  }
+
+  const daeunList = [];
+  const wolStemBase = wolju.stemIdx;
+  const wolBranchBase = wolju.branchIdx;
+  for (let i = 1; i <= 9; i++) {
+    const dir = isForward ? i : -i;
+    const stemIdx   = ((wolStemBase   + dir) % 10 + 10) % 10;
+    const branchIdx = ((wolBranchBase + dir) % 12 + 12) % 12;
+    const startAge  = daeunSu + (i - 1) * 10;
+    const birthYear = year;
+    const startYear = birthYear + startAge;
+    const ganSS  = calcDaeunSipseong(stemIdx);
+    const jiSS   = calcDaeunJiSipseong(branchIdx);
+    daeunList.push({
+      idx: i, stemIdx, branchIdx,
+      gan: CHEONGAN[stemIdx], ganHJ: CHEONGAN_HJ[stemIdx],
+      ji:  JIJI[branchIdx],  jiHJ:  JIJI_HJ[branchIdx],
+      ganSS, jiSS,
+      startAge, endAge: startAge + 9,
+      startYear,
+    });
+  }
+
+  // 현재 나이 (만 나이 기준)
+  const currentYear = 2026;
+  const koreanAge = currentYear - year + 1;
+  const manAge = currentYear - year;
+  const currentDaeun = daeunList.find(d => manAge >= d.startAge && manAge <= d.endAge) || daeunList[0];
+
+  // 현재 세운 (2026년)
+  const seunYear = 2026;
+  const seunStemIdx   = ((seunYear - 4) % 10 + 10) % 10;
+  const seunBranchIdx = ((seunYear - 4) % 12 + 12) % 12;
+  const seunGan  = CHEONGAN[seunStemIdx];
+  const seunGanHJ = CHEONGAN_HJ[seunStemIdx];
+  const seunJi   = JIJI[seunBranchIdx];
+  const seunJiHJ = JIJI_HJ[seunBranchIdx];
+  const seunGanSS = calcDaeunSipseong(seunStemIdx);
+  const seunJiSS  = calcDaeunJiSipseong(seunBranchIdx);
+  const seunGanOh = CHEONGAN_OHENG[seunGan];
+  const seunJiOh  = JIJI_OHENG[seunJi];
+
+  // 십성별 색상
+  const SS_COLOR = {
+    비견:'#FAECE7',겁재:'#FBEAF0',식신:'#FFF3CD',상관:'#FAECE7',
+    편재:'#EEEDFE',정재:'#E1F5EE',편관:'#E8F5E9',정관:'#D4EDDA',
+    편인:'#F1EFE8',정인:'#DDEEFF'
+  };
+  const SS_TEXT = {
+    비견:'#7A2E1A',겁재:'#72243E',식신:'#856404',상관:'#712B13',
+    편재:'#3C3489',정재:'#085041',편관:'#1B5E20',정관:'#155724',
+    편인:'#444441',정인:'#185FA5'
+  };
+
+  function ssBadge(ss) {
+    return `<span style="display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:99px;background:${SS_COLOR[ss]||'#eee'};color:${SS_TEXT[ss]||'#333'}">${ss}</span>`;
+  }
+
+  // 십성별 한 줄 요약
+  const SS_SUMMARY = {
+    비견:'주체성·독립심 강화, 경쟁 활발',겁재:'경쟁심 과열, 재물 변동 주의',
+    식신:'재능 발휘, 여유·즐거움 증가',상관:'표현력 폭발, 변화·혁신 시도',
+    편재:'큰 기회 포착, 활동 무대 확대',정재:'안정적 수입, 성실한 관리',
+    편관:'도전·압박, 책임감 극대화',정관:'명예·조직 안정, 원칙 준수',
+    편인:'전문성 심화, 독창적 연구',정인:'학습·수용력 상승, 귀인 출현'
+  };
+
+  // 현재 대운 흐름 분석
+  function analyzeDaeunFlow(d, ilganOheng, shingang) {
+    const ganSS = d.ganSS;
+    const jiSS  = d.jiSS;
+    const ganOh = CHEONGAN_OHENG[d.gan];
+    const jiOh  = JIJI_OHENG[d.ji];
+
+    // 신강이면 관성·재성 유리, 비겁·인성 불리
+    // 신약이면 비겁·인성 유리, 재성·관성 불리
+    const goodSS_strong = ['편재','정재','편관','정관','식신','상관'];
+    const goodSS_weak   = ['비견','겁재','편인','정인'];
+    const refSS = shingang.level === 'strong' ? goodSS_strong : goodSS_weak;
+
+    const goodCount = [ganSS, jiSS].filter(s => refSS.includes(s)).length;
+    const flow = goodCount === 2 ? '순풍' : goodCount === 1 ? '보통' : '역풍';
+    return flow;
+  }
+
+  const shingang = SajuEngine.getShingang(sipseong);
+  const ilganOheng = SajuEngine.CHEONGAN_OHENG[ilju.gan];
+
+  const currentDaeunFlow = analyzeDaeunFlow(currentDaeun, ilganOheng, shingang);
+  const flowEmoji = { 순풍:'🟢', 보통:'🟡', 역풍:'🔴' };
+  const flowDesc  = {
+    순풍:'전반적으로 유리한 흐름입니다. 주요 결정·투자·변화를 이 시기에 적극적으로 시도하세요.',
+    보통:'기운이 혼재합니다. 강점 분야에 집중하되 새로운 큰 도전은 신중하게 판단하세요.',
+    역풍:'에너지 소모가 큰 시기입니다. 무리한 확장보다 내실을 다지고 역량을 충전하는 데 집중하세요.',
+  };
+
+  // 세운 해석 — 일지와 충/합 여부 체크
+  const ilBranchIdx = ilju.branchIdx;
+  // 충: 6 간격
+  const isSeunJiChung = Math.abs(seunBranchIdx - ilBranchIdx) === 6;
+  // 합: 자축, 인해, 묘술, 진유, 사신, 오미
+  const JIHABPAIRS = [[0,1],[2,11],[3,10],[4,9],[5,8],[6,7]];
+  const isSeunJiHap = JIHABPAIRS.some(([a,b]) => (seunBranchIdx===a&&ilBranchIdx===b)||(seunBranchIdx===b&&ilBranchIdx===a));
+  const wolBranchIdx = wolju.branchIdx;
+  const isSeunWolChung = Math.abs(seunBranchIdx - wolBranchIdx) === 6;
+
+  let seunSpecial = '';
+  if (isSeunJiChung) seunSpecial += `<br>⚡ <strong>세운 지지 ${seunJiHJ}(${seunJi})가 일지 ${ilju.jiHJ}(${ilju.ji})와 충(衝)</strong>합니다 — 배우자궁·직업 영역에 변동이 생길 수 있습니다.`;
+  if (isSeunJiHap)  seunSpecial += `<br>🤝 <strong>세운 지지 ${seunJiHJ}(${seunJi})가 일지 ${ilju.jiHJ}(${ilju.ji})와 합(合)</strong>합니다 — 인연·파트너십이 강화됩니다.`;
+  if (isSeunWolChung) seunSpecial += `<br>⚡ <strong>세운 지지가 월지 ${wolju.jiHJ}(${wolju.ji})와 충</strong> — 환경·부모·직장 계통 변화 주의.`;
+
+  // 대운 칩 (현재 대운 강조, 나머지 3개는 잠금)
+  const daeunChips = daeunList.slice(0, 4).map((d, i) => {
+    const isCurrent = d.idx === currentDaeun.idx;
+    const isLocked  = i >= 2 && !isCurrent;
+    if (isLocked) {
+      return `<div class="daeun-year-chip locked-chip">
+        <span class="dy-age">${d.startAge}~${d.endAge}세</span>
+        <span class="dy-ganjj">??</span>
+        <span class="dy-content">████████</span>
+      </div>`;
+    }
+    return `<div class="daeun-year-chip${isCurrent?' daeun-current':''}">
+      <span class="dy-age">${d.startAge}~${d.endAge}세${isCurrent?' ★현재':''}</span>
+      <span class="dy-ganjj">${d.ganHJ}${d.jiHJ} (${d.gan}${d.ji})</span>
+      <span class="dy-ss">${ssBadge(d.ganSS)} ${ssBadge(d.jiSS)}</span>
+      <span class="dy-content">${SS_SUMMARY[d.ganSS] || ''}</span>
     </div>`;
   }).join('');
 
@@ -1052,16 +1270,57 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
       ${bonusLocked}
     </div>
 
-    <!-- 대운 섹션 (미구현 → 잠금) -->
+    <!-- 대운 섹션 — 현재 대운 무료 공개 + 나머지 잠금 -->
     <div class="daeun-locked-section">
-      <div class="daeun-title">🌊 대운(大運) 10년 흐름 — 당신의 인생 지도</div>
+      <div class="daeun-title">🌊 대운(大運) — 인생의 10년 흐름</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px">대운수 <strong>${daeunSu}</strong> · ${isForward ? '순행(順行)' : '역행(逆行)'} · 현재 대운 <strong>${currentDaeun.ganHJ}${currentDaeun.jiHJ}</strong></div>
       <div class="daeun-years-row">${daeunChips}</div>
-      <div class="daeun-lock-overlay">
-        <div class="lock-label" style="font-family:'Noto Serif KR',serif;font-size:14px;font-weight:700;color:var(--ink);text-align:center">
-          지금 흐르는 대운이 당신에게 무엇을 말하는지
-          <small style="display:block;font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--muted);font-weight:400;margin-top:4px">언제 기회가 오고 언제 조심해야 하는지 확인하세요</small>
+
+      <!-- 현재 대운 상세 — 무료 공개 -->
+      <div class="current-daeun-card">
+        <div class="cdc-header">
+          <span class="cdc-badge">★ 현재 대운</span>
+          <span class="cdc-period">${currentDaeun.startAge}~${currentDaeun.endAge}세 (${currentDaeun.startYear}~${currentDaeun.startYear+9}년)</span>
+          <span class="cdc-flow">${flowEmoji[currentDaeunFlow]} ${currentDaeunFlow}</span>
         </div>
-        <button class="lock-btn" onclick="scrollToPaywall()" style="padding:8px 24px;font-size:13px">대운 전체 보기 →</button>
+        <div class="cdc-ganjj">
+          <span class="cdc-char" style="background:${SajuEngine.OHENG_CHAR[SajuEngine.CHEONGAN_OHENG[currentDaeun.gan]]?.color||'#888'}">${currentDaeun.ganHJ}</span>
+          <span class="cdc-char" style="background:${SajuEngine.OHENG_CHAR[SajuEngine.JIJI_OHENG[currentDaeun.ji]]?.color||'#888'}">${currentDaeun.jiHJ}</span>
+          <div class="cdc-ss-row">${ssBadge(currentDaeun.ganSS)} ${ssBadge(currentDaeun.jiSS)}</div>
+        </div>
+        <div class="cdc-body">
+          <p><strong>천간 ${currentDaeun.ganHJ}(${currentDaeun.gan})</strong> — ${SS_SUMMARY[currentDaeun.ganSS]||''}</p>
+          <p style="margin-top:6px"><strong>지지 ${currentDaeun.jiHJ}(${currentDaeun.ji})</strong> — ${SS_SUMMARY[currentDaeun.jiSS]||''}</p>
+          <p style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">${flowDesc[currentDaeunFlow]}</p>
+        </div>
+      </div>
+
+      <!-- 2026 세운 — 무료 공개 -->
+      <div class="seun-card">
+        <div class="seun-header">
+          <span class="seun-year-badge">${seunYear}년 세운</span>
+          <span class="seun-ganjj">${seunGanHJ}${seunJiHJ} (${seunGan}${seunJi})</span>
+          <span>${ssBadge(seunGanSS)} ${ssBadge(seunJiSS)}</span>
+        </div>
+        <div class="seun-body">
+          천간 <strong>${seunGanHJ}(${seunGan}·${seunGanSS})</strong>이 들어와 ${SS_SUMMARY[seunGanSS]||''}합니다.
+          지지 <strong>${seunJiHJ}(${seunJi}·${seunJiSS})</strong>는 ${SS_SUMMARY[seunJiSS]||''}의 흐름을 만듭니다.${seunSpecial}
+        </div>
+        <div class="seun-tags">
+          <span class="seun-tag pos">${seunGanSS} — ${SS_SUMMARY[seunGanSS]?.split('·')[0]||''}</span>
+          <span class="seun-tag ${isSeunJiChung?'neg':isSeunJiHap?'pos':'neu'}">${isSeunJiChung?'일지 충 — 변동 주의':isSeunJiHap?'일지 합 — 인연 강화':'지지 안정'}</span>
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)">
+          💡 세운별 월별 흐름, 2027년 이후 세운, 대운×세운 겹침 분석은 <a href="#paywall-section" onclick="scrollToPaywall()" style="color:var(--gold);font-weight:600">심층 풀이</a>에서 확인하세요.
+        </div>
+      </div>
+
+      <div class="daeun-lock-overlay" style="border-radius:12px;margin-top:0">
+        <div class="lock-label" style="font-family:'Noto Serif KR',serif;font-size:13px;font-weight:700;color:var(--ink);text-align:center">
+          나머지 대운 전체 + 세운별 월 흐름 해석
+          <small style="display:block;font-family:'Noto Sans KR',sans-serif;font-size:11px;color:var(--muted);font-weight:400;margin-top:4px">언제 기회가 오고 언제 조심해야 하는지 정밀하게 확인하세요</small>
+        </div>
+        <button class="lock-btn" onclick="scrollToPaywall()" style="padding:7px 20px;font-size:12px">대운 전체 보기 →</button>
       </div>
     </div>
 
