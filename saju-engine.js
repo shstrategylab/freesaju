@@ -982,37 +982,139 @@ ${ss.detail}<br><br>
       });
     }
 
-    // ⑨ 육친(六親) — 무료: 배우자·부모 티저 / 잠금: 자녀·형제
-    const YUKCHINS = {
-      남: {
-        spouse: { star: '정재', label: '배우자(正財)', desc: '재성이 배우자를 의미합니다.' },
-        parent: { star: '정인', label: '어머니(正印)', desc: '인성이 어머니를 의미합니다.' },
+    // ⑨ 육친(六親) — 부(父)·모(母) 분석
+    // 명리학 기준:
+    //   모(母) = 정인(正印) / 편인(偏印) — 인성(印星) 전체
+    //   부(父) = 남성 기준 편재(偏財), 여성 기준 편관(偏官)
+    //            (통설: 재성이 부, 관성이 부 — 양설이 있으나 편재/편관을 주성으로 사용)
+
+    // 사주 전체 십성 목록 수집 (위치 포함)
+    const allSsEntries = []; // { ss, pos, gan, pillar }
+    // 천간·지지 순회
+    const pillarKeys = [
+      { p: yeonju, stemPos: '년주 천간', jiPos: '년주 지지' },
+      { p: wolju,  stemPos: '월주 천간', jiPos: '월지(핵심)' },
+      { p: ilju,   stemPos: '일간(나)',  jiPos: '일지' },
+      { p: siju,   stemPos: '시주 천간', jiPos: '시주 지지' },
+    ].filter(pk => pk.p);
+    for (const [ss, entries] of Object.entries(sipseong.detail)) {
+      for (const e of entries) {
+        allSsEntries.push({ ss, pos: e.pos });
+      }
+    }
+
+    // 모(母) — 인성(정인+편인) 분석
+    const MOTHER_SS = ['정인', '편인'];
+    const MOTHER_LABEL = { 정인: '정인(正印)', 편인: '편인(偏印)' };
+    const motherEntries = allSsEntries.filter(e => MOTHER_SS.includes(e.ss));
+    const motherCount = motherEntries.length;
+    const motherPositions = motherEntries.map(e => e.pos).join(' · ');
+
+    // 모(母) 해석 — 인성 강도에 따른 모친과의 관계 패턴
+    const MOTHER_INTERP = {
+      strong: {  // 인성 2개 이상
+        rel: '모친과의 인연이 깊고 유대가 강합니다.',
+        style: '어머니의 영향을 크게 받으며 자랐거나, 모친에게 의지하는 시간이 길었을 가능성이 높습니다.',
+        note: '인성이 강한 사주는 어머니가 오래 곁에 있거나, 모친의 도움이 삶의 중요한 전환점이 되는 경우가 많습니다.',
       },
-      여: {
-        spouse: { star: '정관', label: '배우자(正官)', desc: '관성이 배우자를 의미합니다.' },
-        parent: { star: '정인', label: '어머니(正印)', desc: '인성이 어머니를 의미합니다.' },
+      normal: {  // 인성 1개
+        rel: '모친과의 관계는 안정적이고 적절한 거리를 유지합니다.',
+        style: '어머니의 영향을 받았지만 독립적으로 성장하는 균형 잡힌 구조입니다.',
+        note: '인성이 하나인 경우 모친의 지원이 적절한 시점에 필요한 만큼 들어오는 패턴입니다.',
+      },
+      none: {    // 인성 0개
+        rel: '사주 천간·지지에 인성(모친성)이 드러나지 않습니다.',
+        style: '어머니와 일찍 떨어지거나 독립적으로 자기 길을 개척하는 경향이 강합니다.',
+        note: '인성이 없는 사주는 모친과의 인연이 짧거나 거리감이 있는 경우가 많습니다. 단, 지장간에 인성이 암장된 경우 내면의 어머니상은 존재합니다.',
+      },
+    };
+    const motherLevel = motherCount >= 2 ? 'strong' : motherCount === 1 ? 'normal' : 'none';
+    const mi = MOTHER_INTERP[motherLevel];
+
+    // 부(父) — 남성: 편재(偏財), 여성: 편관(偏官) 주성
+    // 보조성: 정재(남), 정관(여)도 참고
+    const FATHER_MAIN_M = ['편재', '정재'];
+    const FATHER_MAIN_F = ['편관', '정관'];
+    const fatherMainSsList = FATHER_MAIN_M; // 성별은 HTML에서 처리 — 엔진은 양쪽 다 넘김
+    const fatherEntriesM = allSsEntries.filter(e => FATHER_MAIN_M.includes(e.ss));
+    const fatherEntriesF = allSsEntries.filter(e => FATHER_MAIN_F.includes(e.ss));
+    const fatherCountM = fatherEntriesM.length;
+    const fatherCountF = fatherEntriesF.length;
+    const fatherPosM = fatherEntriesM.map(e => e.pos).join(' · ');
+    const fatherPosF = fatherEntriesF.map(e => e.pos).join(' · ');
+
+    // 부(父) 해석 텍스트 — 남성(재성 기준)
+    const FATHER_INTERP_M = {
+      strong: {
+        rel: '부친과의 인연이 깊습니다. 아버지의 존재감이 크거나 경제적·심리적 영향이 강하게 작용한 경우가 많습니다.',
+        style: '재성이 강한 구조는 아버지가 재물·사업과 연관된 인물이거나, 부친을 통해 재물의 흐름이 연결되는 패턴입니다.',
+        note: '재성 과다 시 부친과의 관계에 변동(갈등·이별·재결합)이 있을 수 있습니다.',
+      },
+      normal: {
+        rel: '부친과의 관계는 평범하고 안정적인 인연입니다.',
+        style: '재성이 적절히 있어 아버지로부터 적당한 영향과 지원을 받는 구조입니다.',
+        note: '재성이 용신이라면 부친이 삶의 귀인이 될 수 있습니다.',
+      },
+      none: {
+        rel: '사주에 부친성(재성)이 드러나지 않습니다.',
+        style: '아버지와 일찍 분리되거나 존재감이 약한 경우가 많습니다. 독립적으로 자신의 재물을 만들어가는 패턴입니다.',
+        note: '재성이 없어도 지장간에 암장된 경우 부친과의 인연은 내면 깊은 곳에 자리합니다.',
       },
     };
 
-    // 육친 카드 (성별 무관 공통 생성 — index.html에서 gender 전달 필요)
-    // 배우자궁(일지) 기반 티저
-    const spouseJi = ilju.ji;
-    const spouseJjg = (JIJANGGAN[spouseJi] || []).map(item => ({
-      ...item,
-      ganHJ: CHEONGAN_HJ[item.stemIdx],
-      ss: getStemSipseong(ilju.stemIdx, item.stemIdx),
-    }));
-    const hasSpouseStar = spouseJjg.some(g => g.ss === '정재' || g.ss === '편재' || g.ss === '정관' || g.ss === '편관');
+    // 부(父) 해석 텍스트 — 여성(관성 기준)
+    const FATHER_INTERP_F = {
+      strong: {
+        rel: '부친과의 인연이 강합니다. 아버지의 권위와 영향력이 삶에 크게 작용합니다.',
+        style: '관성이 강한 구조는 아버지가 사회적으로 권위 있는 직업을 가졌거나, 원칙·규율을 중시하는 분인 경우가 많습니다.',
+        note: '관성 과다 시 아버지와의 관계에서 압박이나 갈등이 생기기도 하지만, 그 경험이 삶의 단단한 기반이 됩니다.',
+      },
+      normal: {
+        rel: '부친과의 관계는 안정적인 인연입니다.',
+        style: '관성이 하나 있는 구조는 아버지가 적절한 기준과 권위를 통해 삶의 방향을 잡아주는 역할을 합니다.',
+        note: '관성이 용신이라면 부친이 중요한 삶의 귀인이 될 수 있습니다.',
+      },
+      none: {
+        rel: '사주에 부친성(관성)이 드러나지 않습니다.',
+        style: '아버지의 존재감이 약하거나 일찍 독립한 경우가 많습니다. 자신만의 원칙과 기준으로 삶을 설계하는 패턴입니다.',
+        note: '관성이 없어도 대운·세운에서 관성이 들어오는 시기에 아버지와 관련된 사건이 발생하기도 합니다.',
+      },
+    };
+
+    const fatherLevelM = fatherCountM >= 2 ? 'strong' : fatherCountM === 1 ? 'normal' : 'none';
+    const fatherLevelF = fatherCountF >= 2 ? 'strong' : fatherCountF === 1 ? 'normal' : 'none';
+    const fiM = FATHER_INTERP_M[fatherLevelM];
+    const fiF = FATHER_INTERP_F[fatherLevelF];
+
+    // 충(衝) 여부 — 월지(부모궁)와 충 발생 시 부모 인연 변동 신호
+    const CHUNG_PAIRS = [[0,6],[1,7],[2,8],[3,9],[4,10],[5,11]]; // 자오, 축미, 인신, 묘유, 진술, 사해
+    const wolBranchIdxForParent = wolju.branchIdx;
+    const ilBranchIdxForParent  = ilju.branchIdx;
+    const isWolIlChung = CHUNG_PAIRS.some(([a,b]) =>
+      (wolBranchIdxForParent===a && ilBranchIdxForParent===b) ||
+      (wolBranchIdxForParent===b && ilBranchIdxForParent===a)
+    );
+    const chungNote = isWolIlChung
+      ? `<br><br>⚡ <strong>월지(부모궁)와 일지 간 충(衝)</strong>이 발생합니다. 부모와 일찍 분리되거나 독립하는 경험, 또는 부모와의 관계에서 큰 변화가 있었을 가능성이 높습니다.`
+      : '';
 
     lines.push({
       tag: 'yukchins',
-      title: '👨‍👩‍👧 육친(六親) — 배우자궁',
-      content: `일지 <strong>${ilju.jiHJ}(${spouseJi})</strong>가 배우자궁입니다.<br><br>` +
-        `배우자궁 지장간: <strong>${spouseJjg.map(g => `${g.ganHJ}(${g.ss})`).join(' · ')}</strong><br><br>` +
-        (hasSpouseStar
-          ? `배우자궁에 <strong>배우자성(재성·관성)</strong>이 암장되어 있습니다. 겉으로 드러나지 않아도 내면에 인연의 씨앗이 자리하고 있으며, 시간이 쌓일수록 배우자 인연이 선명해집니다.`
-          : `배우자궁에 배우자성이 직접적으로 드러나지 않습니다. 인연은 예상치 못한 시점과 방식으로 찾아오는 경향이 있으며, 대운·세운의 흐름 속에서 만남이 열립니다.`) +
-        `<br><br><span style="color:var(--muted);font-size:12px">🔒 자녀·형제·부모 심화 분석은 프리미엄에서 확인하세요</span>`,
+      title: '👨‍👩‍👧 육친(六親) — 부(父)·모(母)',
+      content:
+        // 모(母) 섹션
+        `<strong style="font-size:13px">🌿 모친(母親) — 인성(印星)</strong><br>` +
+        `인성 분포: <strong>${motherCount > 0 ? `${motherCount}개 (${motherPositions})` : '없음'}</strong><br><br>` +
+        `${mi.rel}<br>${mi.style}<br>` +
+        `<span style="font-size:12px;color:var(--muted)">${mi.note}</span>` +
+        `<br><br>` +
+        // 부(父) 섹션 — 성별에 따라 분기 (gender는 index.html 렌더링 시 결정)
+        `<strong style="font-size:13px">🏔️ 부친(父親) — 재성/관성</strong><br>` +
+        `<span style="font-size:12px;color:var(--muted)">남성 기준(재성): <strong>${fatherCountM > 0 ? `${fatherCountM}개 (${fatherPosM})` : '없음'}</strong> / 여성 기준(관성): <strong>${fatherCountF > 0 ? `${fatherCountF}개 (${fatherPosF})` : '없음'}</strong></span><br><br>` +
+        `<span class="yukchins-gender-m">${fiM.rel}<br>${fiM.style}<br><span style="font-size:12px;color:var(--muted)">${fiM.note}</span></span>` +
+        `<span class="yukchins-gender-f" style="display:none">${fiF.rel}<br>${fiF.style}<br><span style="font-size:12px;color:var(--muted)">${fiF.note}</span></span>` +
+        chungNote +
+        `<br><br><span style="color:var(--muted);font-size:12px">🔒 형제·자녀·배우자 육친 심화 분석은 프리미엄에서 확인하세요</span>`,
     });
 
     // ⑩ 용신·총평
