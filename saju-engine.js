@@ -1098,14 +1098,222 @@ ${ss.detail}<br><br>
 
   // ─── 메인 분석 함수 ─────────────────────────────────────────────
 
+  // ─── 합충형파해(合衝刑破害) + 신살(神殺) 계산 ───────────────────
+
   /**
-   * 사주 전체 분석
-   * @param {number} year   양력 연도
-   * @param {number} month  양력 월 (1~12)
-   * @param {number} day    양력 일
-   * @param {number} hour   시각 (0~23, -1이면 시주 없음)
-   * @returns {object} 분석 결과 전체
+   * 원국 내 합충형파해 탐지
+   * pillars: [{ stemIdx, branchIdx, label }] 형태
    */
+  function getHapChungHyeong(pillars) {
+    const result = { cheonganHap: [], jijiHap: [], samhap: [], bang: [], chung: [], hyeong: [], pa: [], hae: [] };
+
+    // 기둥 라벨
+    const LABELS = ['연주','월주','일주','시주'];
+
+    // 천간 라벨·한자
+    const stemLabel = (p, i) => `${LABELS[i]} ${CHEONGAN_HJ[p.stemIdx]}`;
+    const branchLabel = (p, i) => `${LABELS[i]} ${JIJI_HJ[p.branchIdx]}`;
+
+    const n = pillars.length;
+
+    // ── 천간합 (甲己·乙庚·丙辛·丁壬·戊癸) ──
+    const CHEONGAN_HAP = [[0,5],[1,6],[2,7],[3,8],[4,9]]; // 갑기·을경·병신·정임·무계
+    const CHEONGAN_HAP_NAME = ['갑기합(土)','을경합(金)','병신합(水)','정임합(木)','무계합(火)'];
+    for (let i = 0; i < n; i++) {
+      for (let j = i+1; j < n; j++) {
+        CHEONGAN_HAP.forEach(([a,b], k) => {
+          if ((pillars[i].stemIdx===a && pillars[j].stemIdx===b) ||
+              (pillars[i].stemIdx===b && pillars[j].stemIdx===a)) {
+            result.cheonganHap.push({ name: CHEONGAN_HAP_NAME[k], pos: `${stemLabel(pillars[i],i)} · ${stemLabel(pillars[j],j)}` });
+          }
+        });
+      }
+    }
+
+    // ── 지지 육합 (子丑·寅亥·卯戌·辰酉·巳申·午未) ──
+    const JIJI_HAP = [[0,1],[2,11],[3,10],[4,9],[5,8],[6,7]];
+    const JIJI_HAP_NAME = ['자축합(土)','인해합(木)','묘술합(火)','진유합(金)','사신합(水)','오미합(火)'];
+    for (let i = 0; i < n; i++) {
+      for (let j = i+1; j < n; j++) {
+        JIJI_HAP.forEach(([a,b], k) => {
+          if ((pillars[i].branchIdx===a && pillars[j].branchIdx===b) ||
+              (pillars[i].branchIdx===b && pillars[j].branchIdx===a)) {
+            result.jijiHap.push({ name: JIJI_HAP_NAME[k], pos: `${branchLabel(pillars[i],i)} · ${branchLabel(pillars[j],j)}` });
+          }
+        });
+      }
+    }
+
+    // ── 삼합 (申子辰·亥卯未·寅午戌·巳酉丑) ──
+    const SAMHAP = [[8,0,4],[11,3,7],[2,6,10],[5,9,1]];
+    const SAMHAP_NAME = ['신자진 삼합(水局)','해묘미 삼합(木局)','인오술 삼합(火局)','사유축 삼합(金局)'];
+    SAMHAP.forEach(([a,b,c], k) => {
+      const found = [a,b,c].filter(bi => pillars.some(p => p.branchIdx === bi));
+      if (found.length === 3) {
+        result.samhap.push({ name: SAMHAP_NAME[k], full: true });
+      } else if (found.length === 2) {
+        result.samhap.push({ name: SAMHAP_NAME[k] + ' (반합)', full: false });
+      }
+    });
+
+    // ── 방합 (寅卯辰·巳午未·申酉戌·亥子丑) ──
+    const BANG = [[2,3,4],[5,6,7],[8,9,10],[11,0,1]];
+    const BANG_NAME = ['인묘진 방합(木局)','사오미 방합(火局)','신유술 방합(金局)','해자축 방합(水局)'];
+    BANG.forEach(([a,b,c], k) => {
+      const found = [a,b,c].filter(bi => pillars.some(p => p.branchIdx === bi));
+      if (found.length === 3) result.bang.push({ name: BANG_NAME[k], full: true });
+      else if (found.length === 2) result.bang.push({ name: BANG_NAME[k] + ' (부분)', full: false });
+    });
+
+    // ── 충 (子午·丑未·寅申·卯酉·辰戌·巳亥) ──
+    const CHUNG = [[0,6],[1,7],[2,8],[3,9],[4,10],[5,11]];
+    const CHUNG_NAME = ['자오충','축미충','인신충','묘유충','진술충','사해충'];
+    for (let i = 0; i < n; i++) {
+      for (let j = i+1; j < n; j++) {
+        CHUNG.forEach(([a,b], k) => {
+          if ((pillars[i].branchIdx===a && pillars[j].branchIdx===b) ||
+              (pillars[i].branchIdx===b && pillars[j].branchIdx===a)) {
+            result.chung.push({ name: CHUNG_NAME[k], pos: `${branchLabel(pillars[i],i)} · ${branchLabel(pillars[j],j)}` });
+          }
+        });
+      }
+    }
+
+    // ── 형 (寅巳申·丑戌未·子卯·辰辰·午午·酉酉·亥亥) ──
+    // 삼형
+    const SAMHYEONG = [[2,5,8],[1,10,7]]; // 인사신·축술미
+    const SAMHYEONG_NAME = ['인사신 삼형(無恩之刑)','축술미 삼형(持勢之刑)'];
+    SAMHYEONG.forEach(([a,b,c], k) => {
+      const found = [a,b,c].filter(bi => pillars.some(p => p.branchIdx === bi));
+      if (found.length === 3) result.hyeong.push({ name: SAMHYEONG_NAME[k], type: '삼형' });
+      else if (found.length === 2) result.hyeong.push({ name: SAMHYEONG_NAME[k] + ' (부분)', type: '형' });
+    });
+    // 자묘형 (無禮之刑)
+    const branchSet = pillars.map(p => p.branchIdx);
+    if (branchSet.includes(0) && branchSet.includes(3)) result.hyeong.push({ name: '자묘형(無禮之刑)', type: '형' });
+    // 자형 (自刑): 진·오·유·해
+    [4,6,9,11].forEach(bi => {
+      if (branchSet.filter(b => b===bi).length >= 2) {
+        result.hyeong.push({ name: `${JIJI_HJ[bi]}${JIJI_HJ[bi]} 자형(自刑)`, type: '자형' });
+      }
+    });
+
+    // ── 파 (子酉·午卯·寅亥·巳申·辰丑·戌未) ──
+    const PA = [[0,9],[6,3],[2,11],[5,8],[4,1],[10,7]];
+    const PA_NAME = ['자유파','오묘파','인해파','사신파','진축파','술미파'];
+    for (let i = 0; i < n; i++) {
+      for (let j = i+1; j < n; j++) {
+        PA.forEach(([a,b], k) => {
+          if ((pillars[i].branchIdx===a && pillars[j].branchIdx===b) ||
+              (pillars[i].branchIdx===b && pillars[j].branchIdx===a)) {
+            result.pa.push({ name: PA_NAME[k], pos: `${branchLabel(pillars[i],i)} · ${branchLabel(pillars[j],j)}` });
+          }
+        });
+      }
+    }
+
+    // ── 해 (子未·丑午·寅巳·卯辰·申亥·酉戌) ──
+    const HAE = [[0,7],[1,6],[2,5],[3,4],[8,11],[9,10]];
+    const HAE_NAME = ['자미해','축오해','인사해','묘진해','신해해','유술해'];
+    for (let i = 0; i < n; i++) {
+      for (let j = i+1; j < n; j++) {
+        HAE.forEach(([a,b], k) => {
+          if ((pillars[i].branchIdx===a && pillars[j].branchIdx===b) ||
+              (pillars[i].branchIdx===b && pillars[j].branchIdx===a)) {
+            result.hae.push({ name: HAE_NAME[k], pos: `${branchLabel(pillars[i],i)} · ${branchLabel(pillars[j],j)}` });
+          }
+        });
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * 주요 신살(神殺) 탐지
+   * dayStemIdx: 일간 인덱스, pillars: 기둥 배열
+   */
+  function getSinsal(dayStemIdx, pillars) {
+    const found = [];
+    const branchSet = pillars.map(p => p.branchIdx);
+    const stemSet   = pillars.map(p => p.stemIdx);
+    const LABELS = ['연주','월주','일주','시주'];
+
+    // 천을귀인 (天乙貴人) — 이미 hasCheoneul 있으나 위치 포함 버전
+    const CHEONEUL_MAP2 = {
+      0:[1,7],1:[0,8],2:[11,9],3:[10,8],4:[1,7],
+      5:[0,8],6:[11,9],7:[10,8],8:[3,5],9:[2,6],
+    };
+    const ceTargets = CHEONEUL_MAP2[dayStemIdx] || [];
+    const cePos = pillars.filter((p,i) => ceTargets.includes(p.branchIdx)).map((_,i) => LABELS[pillars.indexOf(pillars.filter(p=>ceTargets.includes(p.branchIdx))[_])]);
+    // 위치 포함 재계산
+    const ceFound = [];
+    pillars.forEach((p,i) => { if(ceTargets.includes(p.branchIdx)) ceFound.push(LABELS[i]); });
+    if (ceFound.length) found.push({ name:'천을귀인(天乙貴人)', pos: ceFound.join('·'), desc:'귀인의 도움을 받는 길성' });
+
+    // 문창귀인 (文昌貴人) — 일간별 지지
+    const MUNCHANG = [5,6,7,8,9,10,11,0,1,2]; // 갑→사, 을→오, ...
+    pillars.forEach((p,i) => { if(p.branchIdx === MUNCHANG[dayStemIdx]) found.push({ name:'문창귀인(文昌貴人)', pos: LABELS[i], desc:'학문·글재주·시험운 길성' }); });
+
+    // 역마살 (驛馬殺) — 일지/연지 기준 (인신사해)
+    const YEOKMA_MAP = { 0:2, 3:2, 6:2, 9:2,   // 신자진→인
+                          2:8, 5:8, 8:8, 11:8,  // 해묘미→신
+                          1:5, 4:5, 7:5, 10:5,  // 인오술→사
+                          10:11,                  // 사유축→해 (보완)
+                        };
+    // 전통: 연지·일지 기준으로 역마 지지 결정
+    const YEOKMA_STD = {0:8,3:8,6:8,9:8, 1:11,4:11,7:11,10:11, 2:5,5:5,8:5,11:5}; // 자오묘유→신해사인
+    const ilBranch = pillars[2]?.branchIdx ?? -1;
+    const yeokmaTarget = YEOKMA_STD[ilBranch];
+    if (yeokmaTarget !== undefined) {
+      pillars.forEach((p,i) => { if(p.branchIdx===yeokmaTarget) found.push({ name:'역마살(驛馬殺)', pos: LABELS[i], desc:'이동·변화·해외 인연' }); });
+    }
+
+    // 도화살 (桃花殺) — 일지 기준 (자오묘유)
+    const DOHWA_STD = {0:3,3:0,6:9,9:6, 1:3,4:0,7:9,10:6, 2:3,5:0,8:9,11:6};
+    const dohwaTarget = DOHWA_STD[ilBranch];
+    if (dohwaTarget !== undefined) {
+      pillars.forEach((p,i) => { if(p.branchIdx===dohwaTarget) found.push({ name:'도화살(桃花殺)', pos: LABELS[i], desc:'매력·이성 인연·예술 감각' }); });
+    }
+
+    // 양인살 (羊刃殺) — 일간별 지지
+    const YANGIN = [3,2,5,4,5,4,9,8,11,10]; // 갑→묘, 을→인, 병→오, 정→사, 무→오, 기→사, 경→유, 신→신, 임→자, 계→해
+    pillars.forEach((p,i) => { if(p.branchIdx===YANGIN[dayStemIdx]) found.push({ name:'양인살(羊刃殺)', pos: LABELS[i], desc:'강한 추진력·승부욕, 충동 주의' }); });
+
+    // 괴강살 (魁罡殺) — 경진·경술·임진·무술 일주만
+    const GOEGGANG_ILJU = [[6,4],[6,10],[8,4],[4,10]]; // [stemIdx, branchIdx]
+    const isGoeggang = GOEGGANG_ILJU.some(([s,b]) => pillars[2]?.stemIdx===s && pillars[2]?.branchIdx===b);
+    if (isGoeggang) found.push({ name:'괴강살(魁罡殺)', pos:'일주', desc:'강렬한 카리스마·극단적 기복' });
+
+    // 백호대살 (白虎大殺) — 갑진·을미·병술·정축·무진·기미·경진·신축·임술·계미
+    const BAEHO = [[0,4],[1,7],[2,10],[3,1],[4,4],[5,7],[6,4],[7,1],[8,10],[9,7]];
+    const isBaeho = BAEHO.some(([s,b]) => pillars[2]?.stemIdx===s && pillars[2]?.branchIdx===b);
+    if (isBaeho) found.push({ name:'백호대살(白虎大殺)', pos:'일주', desc:'강한 기운·사고 주의 (용신 방향이면 오히려 추진력)' });
+
+    // 공망 (空亡) — 일주 기준 순중 공망
+    // 갑자순→술해, 갑술순→신유, 갑신순→오미, 갑오순→진사, 갑진순→인묘, 갑인순→자축
+    const GONGMANG_MAP = [
+      [0,[10,11]],[2,[8,9]],[4,[6,7]],[6,[4,5]],[8,[2,3]],[10,[0,1]]
+    ]; // 순의 시작 stemIdx(짝수)→공망 지지 2개
+    const ilStemIdx = pillars[2]?.stemIdx ?? 0;
+    const순Start = Math.floor(ilStemIdx / 2) * 2; // 실제로는 일주 갑자일 기준이지만 근사값으로 일간 기준 사용
+    // 정확한 공망: (일주 일진 순번 % 10) 기반 → 여기서는 일간+일지 조합으로 순 결정
+    const ilBranchForGM = pillars[2]?.branchIdx ?? 0;
+    const 순내위치 = ((ilStemIdx % 10) - (ilBranchForGM % 12) + 60) % 10;
+    const 순수 = ((ilBranchForGM - ilStemIdx + 12) % 12); // 순 내 일지 위치
+    const gmBase = (ilStemIdx % 10); // 일간 인덱스
+    // 공망 지지: 순 시작 지지 + 10 이후 2개
+    const 순시작지지 = ((ilBranchForGM - gmBase + 12) % 12);
+    const gm1 = (순시작지지 + 10) % 12;
+    const gm2 = (순시작지지 + 11) % 12;
+    const gmPos = [];
+    pillars.forEach((p,i) => { if(p.branchIdx===gm1||p.branchIdx===gm2) gmPos.push(LABELS[i]); });
+    if (gmPos.length) found.push({ name:`공망(空亡) ${JIJI_HJ[gm1]}${JIJI_HJ[gm2]}`, pos: gmPos.join('·'), desc:'해당 위치 기운이 약해짐 (비어있는 자리)' });
+
+    return found;
+  }
+
+
   function analyze(year, month, day, hour) {
     const yeonju = getYeonju(year);
     const wolju  = getWolju(year, month, day);
@@ -1148,11 +1356,15 @@ ${ss.detail}<br><br>
     const shingang = getShingang(sipseong);
     const yongsin  = getYongsin(shingang.level, dayStemIdx, geokguk, dist);
 
+    // 합충형파해 + 신살
+    const hapchung = getHapChungHyeong(pillars.map((p, i) => ({ ...p, label: ['연주','월주','일주','시주'][i] })));
+    const sinsal   = getSinsal(dayStemIdx, pillars);
+
     const result = {
       yeonju, wolju, ilju, siju,
       pillars,
       ilgan,
-      sipseong,   // { count, score, detail }
+      sipseong,
       dist,
       balance,
       geokguk,
@@ -1161,6 +1373,8 @@ ${ss.detail}<br><br>
       tonggeun,
       yongsin,
       shingang,
+      hapchung,
+      sinsal,
     };
     result.reading = generateReading(result);
     return result;
@@ -1187,6 +1401,8 @@ ${ss.detail}<br><br>
     getJijangganSipseong,
     getTonggeun,
     getYongsin,
+    getHapChungHyeong,
+    getSinsal,
     // 정적 데이터
     CHEONGAN, CHEONGAN_HJ,
     JIJI, JIJI_HJ,
