@@ -752,7 +752,7 @@ const SajuEngine = (() => {
   // ─── 운세 해석 텍스트 생성 (개선판) ────────────────────────────
 
   function generateReading(result) {
-    const { ilju, wolju, geokguk, dist, balance, sipseong } = result;
+    const { yeonju, wolju, ilju, siju, geokguk, dist, balance, sipseong } = result;
     const ilganInfo  = ILGAN_DESC[ilju.gan];
     const geokInfo   = GEOKGUK[geokguk] || GEOKGUK['정관격'];
     const comboDesc  = getComboDesc(ilju.gan, geokguk);
@@ -989,14 +989,7 @@ ${ss.detail}<br><br>
     //            (통설: 재성이 부, 관성이 부 — 양설이 있으나 편재/편관을 주성으로 사용)
 
     // 사주 전체 십성 목록 수집 (위치 포함)
-    const allSsEntries = []; // { ss, pos, gan, pillar }
-    // 천간·지지 순회
-    const pillarKeys = [
-      { p: yeonju, stemPos: '년주 천간', jiPos: '년주 지지' },
-      { p: wolju,  stemPos: '월주 천간', jiPos: '월지(핵심)' },
-      { p: ilju,   stemPos: '일간(나)',  jiPos: '일지' },
-      { p: siju,   stemPos: '시주 천간', jiPos: '시주 지지' },
-    ].filter(pk => pk.p);
+    const allSsEntries = []; // { ss, pos }
     for (const [ss, entries] of Object.entries(sipseong.detail)) {
       for (const e of entries) {
         allSsEntries.push({ ss, pos: e.pos });
