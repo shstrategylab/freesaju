@@ -552,11 +552,19 @@ const SajuEngine = (() => {
     const lines = [];
 
     // ① 타고난 성품 — 일간 심화
+    const shingangForReading = getShingang(sipseong);
+    const shingangLabel = shingangForReading.type;
+    const energyFlow = shingangForReading.level === 'strong'
+      ? `에너지가 충분한 <strong>${shingangLabel}</strong> 사주로, 이 에너지를 어디로 쏟느냐가 인생의 핵심 변수입니다.`
+      : shingangForReading.level === 'weak'
+      ? `기운이 섬세한 <strong>${shingangLabel}</strong> 사주로, 주변의 지원과 환경이 역량 발휘에 결정적입니다.`
+      : `<strong>${shingangLabel}</strong> 사주로, 어떤 상황에서도 안정적으로 자신의 역할을 해냅니다.`;
     lines.push({
       title: '🌟 타고난 성품',
       content: `<strong>${ilganInfo.name}(${ilganInfo.symbol})</strong> 일간으로 태어나셨습니다. ${ilganInfo.personality}<br><br>
 강점: <strong>${ilganInfo.strength}</strong><br>
-주의할 점: <strong>${ilganInfo.weakness}</strong>`,
+주의할 점: <strong>${ilganInfo.weakness}</strong><br><br>
+${energyFlow}`,
     });
 
     // ② 일간 × 격국 통합 해석 (핵심)
@@ -581,16 +589,19 @@ ${comboDesc.body}<br><br>
         intro: '사주의 기운이 강합니다(신강). 자아가 뚜렷하고 독립적이며 추진력이 넘칩니다.',
         tip:   '에너지를 올바른 방향으로 쏟을 목표 설정이 핵심입니다. 관성(官星)·재성(財星)이 이 에너지를 제대로 써주는 그릇 역할을 합니다.',
         caution: '지나친 독단과 고집이 대인관계를 해칠 수 있습니다.',
+        life: '직장보다 자기 사업·프리랜서·독립 환경에서 진가를 발휘하는 경향이 있습니다. 강한 에너지를 방출할 통로(취미, 운동, 창작)가 있을 때 관계도 안정됩니다.',
       },
       weak: {
         intro: '사주의 기운이 섬세합니다(신약). 감수성과 직관이 뛰어나며 협력과 지원 속에서 빛납니다.',
         tip:   '인성(印星)의 지원이나 든든한 조력자(비겁)가 있을 때 역량이 극대화됩니다. 혼자 모든 것을 해결하려 하기보다 협력 구조를 만드는 것이 유리합니다.',
         caution: '과도한 의존이나 자기 주장 부족이 기회를 놓치게 할 수 있습니다.',
+        life: '좋은 멘토·파트너·조직을 만났을 때 역량이 폭발적으로 커지는 타입입니다. 혼자 버티기보다 연대와 협력이 성공 전략입니다.',
       },
       balanced: {
         intro: '사주의 기운이 균형 잡혀 있습니다(중화). 어떤 상황에도 안정적으로 적응하며 팔방미인 타입입니다.',
         tip:   '큰 기복 없이 꾸준하게 성과를 쌓아가는 타입입니다. 극단적인 선택보다 안정적인 성장 경로가 더 잘 맞습니다.',
         caution: '때로는 강한 결단이 필요한 순간에 우유부단해질 수 있습니다.',
+        life: '직장·사업·창작 어느 분야에도 적응 가능합니다. 다만 "전문성의 깊이"를 의도적으로 파는 것이 두각을 나타내는 열쇠입니다.',
       },
     };
     const sg = shingangMap[shingang.level];
@@ -598,7 +609,8 @@ ${comboDesc.body}<br><br>
       title: `💪 사주의 힘 — ${shingang.type}`,
       content: `${sg.intro}<br><br>
 <strong>활용법:</strong> ${sg.tip}<br>
-<strong>주의:</strong> <em>${sg.caution}</em>`,
+<strong>주의:</strong> <em>${sg.caution}</em><br><br>
+<strong>실생활 패턴:</strong> ${sg.life}`,
     });
 
     // ④ 오행 실생활 패턴
@@ -637,12 +649,29 @@ ${romance.pattern}<br>
       }
       return null;
     })();
+
+    // 십성별 삶 연결 메시지
+    const SS_LIFE = {
+      비견:'독립적인 일, 자신의 이름을 건 활동에서 가장 빛납니다. 팀보다 단독 프로젝트나 1인 브랜드가 잘 맞습니다.',
+      겁재:'경쟁이 있는 환경에서 오히려 강해집니다. 재물 기복이 있으므로 안정 자산을 먼저 확보하는 전략이 유리합니다.',
+      식신:'먹고·쉬고·즐기는 것에서 영감을 얻고 재능이 꽃핍니다. 직업이 취미가 될 수 있는 분야를 택할 때 가장 행복합니다.',
+      상관:'규칙보다 자유, 조직보다 독립이 맞습니다. 표현하고 비평하고 창조할 공간이 주어졌을 때 잠재력이 폭발합니다.',
+      편재:'가만히 있으면 기회를 놓칩니다. 사람 만나고 발로 뛰며 흐름을 읽는 활동형 재물 전략이 맞습니다.',
+      정재:'성실함과 꾸준함이 재물의 원천입니다. 단기 투기보다 장기 저축·적립·실물 자산이 잘 맞습니다.',
+      편관:'시련이 성장의 재료입니다. 압박이 있는 환경에서 오히려 강해지며, 책임과 권한이 모두 주어진 자리에서 빛납니다.',
+      정관:'원칙을 지키는 것이 최고의 전략입니다. 신뢰 자산이 쌓이는 공직·전문직·대기업에서 장기적으로 유리합니다.',
+      편인:'한 분야를 깊이 파는 전문가 기질입니다. 자격증·특허·독자 기술이 커리어의 핵심 자산이 됩니다.',
+      정인:'배움이 곧 힘입니다. 공부하고 가르치는 순환 구조에서 역량이 계속 커지며, 지식 기반 커리어가 가장 안정적입니다.',
+    };
+
     if (woljiSS && SIPSEONG[woljiSS]) {
       const ss = SIPSEONG[woljiSS];
+      const lifeMsg = SS_LIFE[woljiSS] || '';
       lines.push({
         title: `🔮 월지 핵심 십성 — ${ss.name}`,
         content: `월지에 <strong>${ss.name}</strong>이 자리합니다. 이것이 삶의 방향성을 결정하는 핵심 에너지입니다.<br><br>
 ${ss.detail}<br><br>
+<strong>실생활 연결:</strong> ${lifeMsg}<br><br>
 <em>키워드: ${ss.desc}</em>`,
       });
     }
