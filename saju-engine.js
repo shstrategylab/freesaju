@@ -1091,21 +1091,51 @@ ${ss.detail}<br><br>
       ? `<br><br>⚡ <strong>월지(부모궁)와 일지 간 충(衝)</strong>이 발생합니다. 부모와 일찍 분리되거나 독립하는 경험, 또는 부모와의 관계에서 큰 변화가 있었을 가능성이 높습니다.`
       : '';
 
+    // 인성 위치 중 의미 있는 위치 설명
+    const MOTHER_POS_LABEL = {
+      '년주 천간': '년주', '년주 지지': '년주',
+      '월주 천간': '월주', '월지(핵심)': '월주',
+      '일간(나)': '일주', '일지': '일주',
+      '시주 천간': '시주', '시주 지지': '시주',
+    };
+    const motherPillarSet = [...new Set(motherEntries.map(e => MOTHER_POS_LABEL[e.pos] || e.pos))];
+    const motherSsNames = [...new Set(motherEntries.map(e => e.ss))];
+    const motherPillarDesc = motherPillarSet.length > 0
+      ? `${motherSsNames.join('·')}이 ${motherPillarSet.join('·')}에 자리합니다.`
+      : '';
+
+    const fatherPillarSetM = [...new Set(fatherEntriesM.map(e => MOTHER_POS_LABEL[e.pos] || e.pos))];
+    const fatherSsNamesM = [...new Set(fatherEntriesM.map(e => e.ss))];
+    const fatherPillarDescM = fatherPillarSetM.length > 0
+      ? `${fatherSsNamesM.join('·')}이 ${fatherPillarSetM.join('·')}에 자리합니다.`
+      : '사주에 재성(부친성)이 드러나지 않습니다.';
+
+    const fatherPillarSetF = [...new Set(fatherEntriesF.map(e => MOTHER_POS_LABEL[e.pos] || e.pos))];
+    const fatherSsNamesF = [...new Set(fatherEntriesF.map(e => e.ss))];
+    const fatherPillarDescF = fatherPillarSetF.length > 0
+      ? `${fatherSsNamesF.join('·')}이 ${fatherPillarSetF.join('·')}에 자리합니다.`
+      : '사주에 관성(부친성)이 드러나지 않습니다.';
+
     lines.push({
       tag: 'yukchins',
       title: '👨‍👩‍👧 육친(六親) — 부(父)·모(母)',
       content:
         // 모(母) 섹션
         `<strong style="font-size:13px">🌿 모친(母親) — 인성(印星)</strong><br>` +
-        `인성 분포: <strong>${motherCount > 0 ? `${motherCount}개 (${motherPositions})` : '없음'}</strong><br><br>` +
-        `${mi.rel}<br>${mi.style}<br>` +
+        (motherPillarDesc ? `<span style="font-size:12px;color:var(--muted)">${motherPillarDesc}</span><br><br>` : '') +
+        `${mi.rel} ${mi.style}<br>` +
         `<span style="font-size:12px;color:var(--muted)">${mi.note}</span>` +
         `<br><br>` +
-        // 부(父) 섹션 — 성별에 따라 분기 (gender는 index.html 렌더링 시 결정)
-        `<strong style="font-size:13px">🏔️ 부친(父親) — 재성/관성</strong><br>` +
-        `<span style="font-size:12px;color:var(--muted)">남성 기준(재성): <strong>${fatherCountM > 0 ? `${fatherCountM}개 (${fatherPosM})` : '없음'}</strong> / 여성 기준(관성): <strong>${fatherCountF > 0 ? `${fatherCountF}개 (${fatherPosF})` : '없음'}</strong></span><br><br>` +
-        `<span class="yukchins-gender-m">${fiM.rel}<br>${fiM.style}<br><span style="font-size:12px;color:var(--muted)">${fiM.note}</span></span>` +
-        `<span class="yukchins-gender-f" style="display:none">${fiF.rel}<br>${fiF.style}<br><span style="font-size:12px;color:var(--muted)">${fiF.note}</span></span>` +
+        // 부(父) 섹션
+        `<strong style="font-size:13px">🏔️ 부친(父親) — 부성(父星)</strong><br>` +
+        `<span class="yukchins-gender-m">` +
+        (fatherPillarDescM ? `<span style="font-size:12px;color:var(--muted)">${fatherPillarDescM}</span><br><br>` : '<br>') +
+        `${fiM.rel} ${fiM.style}<br>` +
+        `<span style="font-size:12px;color:var(--muted)">${fiM.note}</span></span>` +
+        `<span class="yukchins-gender-f" style="display:none">` +
+        (fatherPillarDescF ? `<span style="font-size:12px;color:var(--muted)">${fatherPillarDescF}</span><br><br>` : '<br>') +
+        `${fiF.rel} ${fiF.style}<br>` +
+        `<span style="font-size:12px;color:var(--muted)">${fiF.note}</span></span>` +
         chungNote +
         `<br><br><span style="color:var(--muted);font-size:12px">🔒 형제·자녀·배우자 육친 심화 분석은 프리미엄에서 확인하세요</span>`,
     });
