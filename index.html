@@ -986,10 +986,11 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
     </div>`).join('');
 
   // ── 대운 실제 계산 ──
-  // 대운수: 월주 천간 기준 순행/역행 결정
-  // 양남음녀 → 순행, 음남양녀 → 역행
-  const ilganUmnyang = SajuEngine.CHEONGAN_UMNYANG[ilju.gan]; // '양' or '음'
-  const isForward = (gender === '남' && ilganUmnyang === '양') || (gender === '여' && ilganUmnyang === '음');
+  // 대운수: 연간(年干) 음양 기준으로 순행/역행 결정
+  // 양남·음녀 → 순행 / 음남·양녀 → 역행
+  // ※ 기준은 일간이 아닌 연간(yeonju.gan)
+  const yeonganUmnyang = SajuEngine.CHEONGAN_UMNYANG[yeonju.gan];
+  const isForward = (gender === '남' && yeonganUmnyang === '양') || (gender === '여' && yeonganUmnyang === '음');
 
   // 대운수 계산: 절기까지의 날수 / 3
   // 순행(양남/음녀): 다음(또는 이번달) 절기까지 남은 날
