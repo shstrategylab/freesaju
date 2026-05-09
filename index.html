@@ -991,20 +991,35 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
   const ilganUmnyang = SajuEngine.CHEONGAN_UMNYANG[ilju.gan]; // '양' or '음'
   const isForward = (gender === '남' && ilganUmnyang === '양') || (gender === '여' && ilganUmnyang === '음');
 
-  // 대운수 계산: 절기까지의 날수 / 3 (간략 계산, 월주 기반)
-  // 정밀 절기일 계산 대신 3~9 사이 값으로 추정 (엔진 데이터 기반)
+  // 대운수 계산: 절기까지의 날수 / 3
+  // 순행(양남/음녀): 다음(또는 이번달) 절기까지 남은 날
+  // 역행(음남/양녀): 이전(또는 이번달) 절기까지 지난 날
   const jq = SajuEngine.JIEQI[year] || SajuEngine.JIEQI.default;
-  const cutDay = jq[month - 1];
+  const cutDay = jq[month - 1]; // 이번달 절기일
+
   let daysToNode;
   if (isForward) {
-    // 순행: 다음 절기까지 남은 날
-    const daysInMonth = new Date(year, month, 0).getDate();
-    daysToNode = Math.abs(daysInMonth - day + cutDay);
+    if (day >= cutDay) {
+      // 절기 이후 출생 → 다음달 절기까지 남은 날
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const nextCut = jq[month % 12]; // 다음달 절기일 (0-indexed)
+      daysToNode = (daysInMonth - day) + nextCut;
+    } else {
+      // 절기 이전 출생 → 이번달 절기까지 남은 날
+      daysToNode = cutDay - day;
+    }
   } else {
-    // 역행: 지난 절기까지의 날
-    daysToNode = Math.abs(day - cutDay);
+    if (day >= cutDay) {
+      // 절기 이후 출생 → 이번달 절기에서 지난 날
+      daysToNode = day - cutDay;
+    } else {
+      // 절기 이전 출생 → 전달 절기에서 지난 날
+      const prevCut = jq[(month - 2 + 12) % 12]; // 전달 절기일 (0-indexed)
+      const prevMonthDays = new Date(year, month - 1, 0).getDate();
+      daysToNode = (prevMonthDays - prevCut) + day;
+    }
   }
-  const daeunSu = Math.max(1, Math.min(9, Math.round(daysToNode / 3))) || 5;
+  const daeunSu = Math.max(1, Math.min(9, Math.round(daysToNode / 3)));
 
   // 대운 간지 순서 (월주에서 순행/역행으로 10개)
   const CHEONGAN = SajuEngine.CHEONGAN;
