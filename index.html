@@ -724,8 +724,6 @@
 </div>
 
 <!-- 사주 엔진 -->
-<!-- 만세력 모듈 (saju-engine.js 보다 먼저 로드) -->
-<script src="manseryok.js"></script>
 <script src="saju-engine.js"></script>
 
 <!-- 음력↔양력 변환 라이브러리 -->
@@ -945,18 +943,57 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
 
   // 오행 바 차트 — 순수 비율 기반, 숫자는 막대 위 플로팅
   const maxDist = Math.max(...Object.values(dist), 1);
-  const BAR_MAX_H = 72; // 컨테이너(92px)에서 숫자 공간 확보
+  const BAR_MAX_H = 72;
+  const OHENG_DESC_TABLE = {
+    목: {
+      excess: { label:'과다', labelColor:'#4a7c59', body:'추진력·기획력이 강하지만 고집이 세고 마무리가 약합니다. 시작은 빠른데 완성 전에 새 일을 벌이는 패턴 주의.', body2:'간·담·근육·눈 관련 건강 주의' },
+      lack:   { label:'결핍', labelColor:'#c0392b', body:'계획성과 실행력이 부족해 시작을 미루거나 의욕이 쉽게 꺾입니다. 목(木) 기운 보충 — 초록 식물·숲 환경 추천.', body2:'근육·시력 약화 주의' },
+      normal: { label:'보통', labelColor:'#888',   body:'추진력과 유연성이 균형을 이루며 계획을 꾸준히 실행하는 힘이 있습니다.', body2:'' },
+    },
+    화: {
+      excess: { label:'과다', labelColor:'#c0392b', body:'열정·표현력이 넘치나 감정 과열로 충동적 결정을 내리기 쉽습니다. 냉정하게 멈추는 훈련이 필요합니다.', body2:'심장·혈압·소장 관련 주의' },
+      lack:   { label:'결핍', labelColor:'#c0392b', body:'표현력·사교성이 약해 자신을 드러내는 데 어려움이 있습니다. 의도적인 자기 홍보와 네트워킹이 필요합니다.', body2:'혈액순환·심장 기능 주의' },
+      normal: { label:'보통', labelColor:'#888',   body:'열정과 절제가 균형을 이루어 활동적이면서도 감정 기복이 크지 않습니다.', body2:'' },
+    },
+    토: {
+      excess: { label:'과다', labelColor:'#d4a017', body:'안정 추구가 강해 변화와 기회를 놓치기 쉽습니다. 지나친 보수성을 경계하고 유연성을 의식적으로 키워야 합니다.', body2:'비장·위장·소화기 관련 주의' },
+      lack:   { label:'결핍', labelColor:'#c0392b', body:'중심이 약해 감정·환경 변화에 쉽게 흔들립니다. 규칙적인 루틴과 안정적인 생활 기반 마련이 최우선입니다.', body2:'소화기능·관절 주의' },
+      normal: { label:'보통', labelColor:'#888',   body:'안정감과 유연성이 조화를 이루며 변화에도 흔들리지 않는 중심이 있습니다.', body2:'' },
+    },
+    금: {
+      excess: { label:'과다', labelColor:'#7f8c8d', body:'결단력·원칙이 강하나 유연성이 부족합니다. 대인관계에서 차갑게 느껴지거나 타협을 못하는 상황이 생길 수 있습니다.', body2:'폐·대장·피부 관련 주의' },
+      lack:   { label:'결핍', labelColor:'#c0392b', body:'결단력·실행력이 부족해 좋은 아이디어도 행동으로 옮기기 어렵습니다. 작은 결정부터 빠르게 실행하는 훈련이 필요합니다.', body2:'호흡기·피부 기능 주의' },
+      normal: { label:'보통', labelColor:'#888',   body:'결단력과 융통성이 균형을 이루어 상황에 맞는 판단을 내릴 수 있습니다.', body2:'' },
+    },
+    수: {
+      excess: { label:'과다', labelColor:'#2c3e50', body:'직관·지혜가 뛰어나나 과도한 생각이 실행을 방해합니다. 분석보다 행동이 먼저일 때 더 좋은 결과가 나옵니다.', body2:'신장·방광·생식기 관련 주의' },
+      lack:   { label:'결핍', labelColor:'#c0392b', body:'직관력·유연한 사고가 약해 고지식하게 원칙에만 집착하는 경향이 있습니다. 다양한 경험과 독서로 사고를 넓혀야 합니다.', body2:'신장·방광 기능 주의' },
+      normal: { label:'보통', labelColor:'#888',   body:'지혜와 실행이 균형을 이루어 생각을 행동으로 자연스럽게 연결합니다.', body2:'' },
+    },
+  };
   const ohengBars = Object.entries(dist).map(([oh, cnt]) => {
     const isZero = cnt === 0;
     const h = isZero ? 4 : Math.round((cnt / maxDist) * BAR_MAX_H);
     const barClass = isZero ? 'oheng-bar zero' : 'oheng-bar';
-    const barStyle = isZero
-      ? ''
-      : `height:${h}px;background:${OHENG_COLOR[oh]}`;
+    const barStyle = isZero ? '' : `height:${h}px;background:${OHENG_COLOR[oh]}`;
     const countStyle = isZero
       ? 'position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:600;color:#bbb;white-space:nowrap'
       : `position:absolute;bottom:${h + 5}px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap`;
-    return `<div class="oheng-bar-wrap">
+    // 상태 판정
+    let stateKey = 'normal';
+    if (cnt === 0) stateKey = 'lack';
+    else if (cnt >= 3) stateKey = 'excess';
+    const desc = OHENG_DESC_TABLE[oh]?.[stateKey];
+    const stateTag = desc
+      ? `<span style="font-size:10px;font-weight:700;color:${desc.labelColor};margin-left:4px">${desc.label}</span>`
+      : '';
+    // 막대 아래 설명 (클릭 없이 항상 표시)
+    const descHtml = desc ? `<div style="margin-top:6px;font-size:11px;color:var(--muted);line-height:1.55;text-align:left;padding:6px 8px;background:rgba(0,0,0,.025);border-radius:6px">
+      <div style="font-weight:600;color:var(--ink);margin-bottom:2px">${OHENG_CHAR[oh].label} ${stateTag}</div>
+      <div>${desc.body}</div>
+      ${desc.body2 ? `<div style="margin-top:4px;font-size:10px;color:#e07">🩺 ${desc.body2}</div>` : ''}
+    </div>` : '';
+    return `<div class="oheng-bar-wrap" style="flex:1;min-width:0">
       <div class="oheng-bar-chart-area">
         <span style="${countStyle}">${cnt}</span>
         <div class="${barClass}" style="${barStyle}"></div>
@@ -964,6 +1001,42 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
       <div class="oheng-bar-label">${OHENG_CHAR[oh].label}</div>
     </div>`;
   }).join('');
+
+  // 오행 부연설명 테이블 (막대 아래 별도 렌더)
+  const ohengDetailRows = Object.entries(dist).map(([oh, cnt]) => {
+    let stateKey = 'normal';
+    if (cnt === 0) stateKey = 'lack';
+    else if (cnt >= 3) stateKey = 'excess';
+    const desc = OHENG_DESC_TABLE[oh]?.[stateKey];
+    if (!desc) return '';
+    // 한자 목록 표시
+    const ohChars = (() => {
+      const chars = [];
+      const p = [yeonju, wolju, ilju, siju].filter(Boolean);
+      p.forEach(pl => {
+        if (SajuEngine.CHEONGAN_OHENG[pl.gan] === oh) chars.push(pl.ganHJ);
+        if (SajuEngine.JIJI_OHENG[pl.ji]    === oh) chars.push(pl.jiHJ);
+      });
+      return chars.length ? `<span style="font-size:10px;color:var(--muted);margin-left:4px">(${chars.join('·')})</span>` : '';
+    })();
+    return `<tr>
+      <td style="padding:8px 10px;font-size:12px;font-weight:700;color:${OHENG_COLOR[oh]};white-space:nowrap;vertical-align:top">${OHENG_CHAR[oh].label} ${cnt}개${ohChars}</td>
+      <td style="padding:8px 10px;font-size:11px;font-weight:700;color:${desc.labelColor};white-space:nowrap;vertical-align:top">${desc.label}</td>
+      <td style="padding:8px 10px;font-size:12px;color:var(--ink);line-height:1.6;vertical-align:top">${desc.body}${desc.body2 ? `<br><span style="font-size:10px;color:#e07">🩺 ${desc.body2}</span>` : ''}</td>
+    </tr>`;
+  }).filter(Boolean).join('');
+
+  const ohengDetailTable = ohengDetailRows ? `
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      <thead>
+        <tr style="background:rgba(0,0,0,.03)">
+          <th style="padding:7px 10px;font-size:11px;color:var(--muted);font-weight:600;text-align:left;border-bottom:1px solid var(--border)">오행</th>
+          <th style="padding:7px 10px;font-size:11px;color:var(--muted);font-weight:600;text-align:left;border-bottom:1px solid var(--border)">상태</th>
+          <th style="padding:7px 10px;font-size:11px;color:var(--muted);font-weight:600;text-align:left;border-bottom:1px solid var(--border)">부연 설명</th>
+        </tr>
+      </thead>
+      <tbody>${ohengDetailRows}</tbody>
+    </table>` : '';
 
   // 십성 태그
   const ssTags = Object.entries(sipseong.count)
@@ -1297,6 +1370,7 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
       <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px">
         <div class="saju-table-title" style="margin-bottom:14px">📊 오행 분포</div>
         <div class="oheng-bars">${ohengBars}</div>
+        ${ohengDetailTable}
       </div>
     </div>
 
@@ -1337,6 +1411,59 @@ function renderResult(data, year, month, day, hour, gender, lunarInfo) {
         return interpText ? `<div style="margin-top:14px;padding:12px 14px;background:rgba(200,151,58,.05);border:1px solid rgba(200,151,58,.15);border-radius:10px;font-size:13px;line-height:1.75;color:var(--ink)">${interpText}</div>` : '';
       })()}
       <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.6">
+      ${(() => {
+        const SS_ENERGY = {
+          비견:'주체성·동료', 겁재:'경쟁심·추진력',
+          식신:'재능·낙천',   상관:'표현·창의',
+          편재:'큰 재물·활동', 정재:'안정·성실',
+          편관:'카리스마·시련', 정관:'원칙·조직',
+          편인:'전문·몰입',    정인:'학문·수용',
+        };
+        const POS_LIST = [
+          { label:'연간(年干)', key:'년주 천간',  pillar: yeonju, isGan: true,  meaning:'조상·부모 환경' },
+          { label:'연지(年支)', key:'년주 지지',  pillar: yeonju, isGan: false, meaning:'유년기 환경' },
+          { label:'월간(月干)', key:'월주 천간',  pillar: wolju,  isGan: true,  meaning:'사회·직업 방향' },
+          { label:'월지(月支)', key:'월지(핵심)', pillar: wolju,  isGan: false, meaning:'격국 핵심 ★' },
+          { label:'일지(日支)', key:'일지',        pillar: ilju,   isGan: false, meaning:'배우자·내면' },
+          ...(siju ? [
+            { label:'시간(時干)', key:'시주 천간', pillar: siju, isGan: true,  meaning:'자녀·말년 활동' },
+            { label:'시지(時支)', key:'시주 지지', pillar: siju, isGan: false, meaning:'말년 환경' },
+          ] : []),
+        ];
+        const rows = POS_LIST.map(({ label, key, pillar, isGan, meaning }) => {
+          const char = isGan ? pillar.ganHJ : pillar.jiHJ;
+          const name = isGan ? pillar.gan   : pillar.ji;
+          let ss = '–';
+          for (const [star, entries] of Object.entries(sipseong.detail)) {
+            if (entries.some(e => e.pos === key)) { ss = star; break; }
+          }
+          const isCore = key === '월지(핵심)';
+          const ssInfo = SIPSEONG_I[ss] || {};
+          const energy = SS_ENERGY[ss] || '';
+          const rowBg  = isCore ? 'background:rgba(200,151,58,.06)' : '';
+          const lblClr = isCore ? '#c8973a' : 'var(--ink)';
+          const lblW   = isCore ? 700 : 500;
+          const ssBadge = ss !== '–'
+            ? '<span class="sipseong-tag ' + (ssInfo.category||'') + '" style="padding:2px 8px;font-size:11px">' + ss + '</span>'
+            : '–';
+          return '<tr style="' + rowBg + '">'
+            + '<td style="padding:7px 10px;font-size:12px;font-weight:' + lblW + ';color:' + lblClr + ';white-space:nowrap">' + label + (isCore?' ★':'') + '</td>'
+            + '<td style="padding:7px 10px;font-size:13px;font-weight:700;color:var(--ink);white-space:nowrap">' + char + '<span style="font-size:11px;color:var(--muted);margin-left:3px">(' + name + ')</span></td>'
+            + '<td style="padding:7px 10px;font-size:12px;white-space:nowrap">' + ssBadge + '</td>'
+            + '<td style="padding:7px 10px;font-size:11px;color:var(--muted)">' + energy + '</td>'
+            + '<td style="padding:7px 10px;font-size:11px;color:var(--muted);font-style:italic">' + meaning + '</td>'
+            + '</tr>';
+        }).join('');
+        return '<table style="width:100%;border-collapse:collapse;margin-top:16px;border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:12px">'
+          + '<thead><tr style="background:rgba(0,0,0,.03)">'
+          + '<th style="padding:7px 10px;font-weight:600;color:var(--muted);text-align:left;border-bottom:1px solid var(--border)">위치</th>'
+          + '<th style="padding:7px 10px;font-weight:600;color:var(--muted);text-align:left;border-bottom:1px solid var(--border)">글자</th>'
+          + '<th style="padding:7px 10px;font-weight:600;color:var(--muted);text-align:left;border-bottom:1px solid var(--border)">십성</th>'
+          + '<th style="padding:7px 10px;font-weight:600;color:var(--muted);text-align:left;border-bottom:1px solid var(--border)">에너지 해석</th>'
+          + '<th style="padding:7px 10px;font-weight:600;color:var(--muted);text-align:left;border-bottom:1px solid var(--border)">의미</th>'
+          + '</tr></thead>'
+          + '<tbody>' + rows + '</tbody></table>';
+      })()}
         * 월지(月支)에 있는 십성이 격국의 핵심이며, 삶의 방향성에 가장 큰 영향을 줍니다.
       </div>
     </div>
